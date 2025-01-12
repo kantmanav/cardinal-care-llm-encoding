@@ -1,0 +1,9 @@
+- I have given you a benefit (section) of an insurance policy below.
+    - Each 'service' of the benefit is written in two lines, the first of which specifies the name of the service, and the second of which delineates the conditions for coverage under the service.
+    - The first two lines are a general description of what is covered under the benefit, not specific to any particular service.
+- Please encode an Epilog rule, 'covered(C)', which is true exactly when the person making a claim, 'C', on the policy, is eligible for coverage.
+- I have also given you a set of facts (atoms) that will be defined in any query to the policy below.
+    - Many of these atoms are of the form 'claim.fact(C, _)', meaning that they will be defined for the claim, 'C', by filling in a value for the underscore (this is essentially a parameter for the claim).
+    - Others are of the form 'fact(_)', meaning they are not specific to the claim and will be defined generally by filling in a value for the underscore.
+- Please write your Epilog rule, 'covered(C)', in such a manner that it uses these atoms to determine whether the claim, 'C', on the policy, is eligible for coverage.
+- Return only Epilog code in your reply. NO EXPLANATION is necessary.

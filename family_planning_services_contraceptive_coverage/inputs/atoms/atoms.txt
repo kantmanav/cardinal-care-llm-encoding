@@ -1,0 +1,17 @@
+Unary fact: claim.service_type
+
+Unary fact: claim.type_of_contraceptive_counseling
+
+Unary fact: claim.counseling_setting
+
+Unary fact: claim.type_of_female_contraceptive_method_provided
+
+Unary fact: claim.otc_female_contraceptive_method_is_prescribed_by_provider
+
+Unary fact: claim.mode_of_providing_service
+
+Unary fact: claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies
+
+Unary fact: otc_female_contraceptive_method
+
+Unary fact: fda_approved_female_contraceptive_method
