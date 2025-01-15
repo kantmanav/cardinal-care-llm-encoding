@@ -1,17 +1,17 @@
-Unary fact: claim.service_type
+Fact: claim.service_type(C, _)
 
-Unary fact: claim.type_of_contraceptive_counseling
+Fact: claim.type_of_contraceptive_counseling(C, _)
 
-Unary fact: claim.counseling_setting
+Fact: claim.counseling_setting(C, _)
 
-Unary fact: claim.type_of_female_contraceptive_method_provided
+Fact: claim.type_of_female_contraceptive_method_provided(C, _)
 
-Unary fact: claim.otc_female_contraceptive_method_is_prescribed_by_provider
+Fact: claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, _)
 
-Unary fact: claim.mode_of_providing_service
+Fact: claim.mode_of_providing_service(C, _)
 
-Unary fact: claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies
+Fact: claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies(C, _)
 
-Unary fact: otc_female_contraceptive_method
+Fact: otc_female_contraceptive_method(_)
 
-Unary fact: fda_approved_female_contraceptive_method
+Fact: fda_approved_female_contraceptive_method(_)
