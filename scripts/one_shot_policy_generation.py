@@ -44,7 +44,7 @@ def encode(encode_prompt, policy, atoms, out_dir, model, benefit, methodology, e
     Generate the encoding and save the output file.
     """
     # Construct output file name
-    encoding = os.path.join(out_dir, model, f"encoding_{benefit}_{methodology}_{exp_num}.txt")
+    encoding = os.path.join(out_dir, model, f"encoding_{benefit}_{methodology}_{model}_{exp_num}.txt")
     
     # Call the prompt function
     prompt(
