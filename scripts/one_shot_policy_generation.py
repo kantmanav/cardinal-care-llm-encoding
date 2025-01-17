@@ -1,6 +1,7 @@
 import argparse
 import os
 from prompt_llm import prompt
+from utils import get_next_experiment_number
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Parameters for generating LLM encodings")
@@ -37,25 +38,6 @@ def get_relevant_files(benefit_name, base_path):
     os.makedirs(output_dir, exist_ok=True)
     
     return prompt_file, policy_file, atoms_file, output_dir
-
-def get_next_experiment_number(output_dir, model):
-    """
-    Determine the next experiment number to avoid overwriting existing files.
-    """
-    model_dir = os.path.join(output_dir, model)
-    os.makedirs(model_dir, exist_ok=True)  # Ensure model-specific output directory exists
-
-    existing_files = [f for f in os.listdir(model_dir) if f.startswith("encoding")]
-    trial_numbers = []
-    
-    for file in existing_files:
-        try:
-            trial_number = int(file.split('_')[-1].split('.')[0])
-            trial_numbers.append(trial_number)
-        except (IndexError, ValueError):
-            continue
-
-    return max(trial_numbers, default=0) + 1
 
 def encode(encode_prompt, policy, atoms, out_dir, model, benefit, methodology, exp_num):
     """
