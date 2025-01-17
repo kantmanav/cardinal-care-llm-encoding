@@ -1,0 +1,58 @@
+```prolog
+% Main rule
+covered(C) :-
+    counseling_service_covered(C).
+covered(C) :-
+    contraceptives_service_covered(C).
+covered(C) :-
+    voluntary_sterilization_service_covered(C).
+
+% Counseling services
+counseling_service_covered(C) :-
+    claim.service_type(C, female_contraceptive_counseling),
+    claim.type_of_contraceptive_counseling(C, Type),
+    counseling_type_covered(Type),
+    claim.counseling_setting(C, Setting),
+    counseling_setting_covered(Setting).
+
+counseling_type_covered(methods).
+counseling_type_covered(management_of_side_effects).
+counseling_type_covered(adherence).
+
+counseling_setting_covered(individual).
+counseling_setting_covered(group).
+
+% Contraceptives
+contraceptives_service_covered(C) :-
+    claim.service_type(C, female_contraceptive_drugs_or_devices_and_follow_up_care),
+    claim.type_of_female_contraceptive_method_provided(C, Method),
+    contraceptive_method_covered(Method, C),
+    claim.mode_of_providing_service(C, Mode),
+    contraceptive_mode_covered(Mode).
+
+contraceptive_method_covered(Method, C) :-
+    fda_approved_female_contraceptive_method(Method),
+    (   \+ otc_female_contraceptive_method(Method)
+    ;   ( otc_female_contraceptive_method(Method),
+          claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, yes) )
+    ).
+
+contraceptive_mode_covered(provided_by).
+contraceptive_mode_covered(administered_by).
+contraceptive_mode_covered(removed_by).
+contraceptive_mode_covered(provided_related_service).
+contraceptive_mode_covered(provided_related_supplies).
+contraceptive_mode_covered(provided_follow_up_care).
+
+% Voluntary sterilization
+voluntary_sterilization_service_covered(C) :-
+    claim.service_type(C, female_voluntary_sterilization),
+    claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies(C, Type),
+    voluntary_sterilization_type_covered(Type).
+
+voluntary_sterilization_type_covered(tubal_ligation).
+voluntary_sterilization_type_covered(sterilization_implants).
+voluntary_sterilization_type_covered(related_services).
+voluntary_sterilization_type_covered(related_supplies).
+```
+
