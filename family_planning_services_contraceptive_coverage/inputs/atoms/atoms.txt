@@ -1,24 +1,24 @@
-Fact: claim.service_type(C, _)
+Fact: claim.service_type(C, ***)
 Valid inputs: female_contraceptive_counseling, female_contraceptive_drugs_or_devices_and_follow_up_care, female_voluntary_sterilization
 
-Fact: claim.type_of_contraceptive_counseling(C, _)
+Fact: claim.type_of_contraceptive_counseling(C, ***)
 Valid inputs: methods, management_of_side_effects, adherence, other
 
-Fact: claim.counseling_setting(C, _)
+Fact: claim.counseling_setting(C, ***)
 Valid inputs: individual, group, other
 
-Fact: claim.type_of_female_contraceptive_method_provided(C, _)
+Fact: claim.type_of_female_contraceptive_method_provided(C, ***)
 Valid inputs: sterilization_surgery_for_women, iud_without_hormone, iud_with_progestin, implantable_rod, contraceptive_injection_shot, the_pill_estrogen_and_progestin, the_pill_estrogen_and_progestin_extended_continuous, the_mini_pill_progestin, patch_transdermal, vaginal_contraceptive_ring, male_condom, diaphragm_with_spermicide, sponge_with_spermicide, cervical_cap_with_spermicide, female_condom, spermicide_otc, spermicide_prescription, levonorgestrel_1_5_mg, ulipristal_acetate, other
 
-Fact: claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, _)
+Fact: claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, ***)
 Valid inputs: yes, no
 
-Fact: claim.mode_of_providing_service(C, _)
+Fact: claim.mode_of_providing_service(C, ***)
 Valid inputs: provided_by, administered_by, removed_by, provided_related_service, provided_related_supplies, provided_follow_up_care, other
 
-Fact: claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies(C, _)
+Fact: claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies(C, ***)
 Valid inputs: tubal_ligation, sterilization_implants, related_services, related_supplies, other
 
-Fact: otc_female_contraceptive_method(_)
+Fact: otc_female_contraceptive_method(***)
 
-Fact: fda_approved_female_contraceptive_method(_)
+Fact: fda_approved_female_contraceptive_method(***)
