@@ -3,34 +3,45 @@ import os
 from openai import OpenAI
 
 def get_response(model, prompt):
-    # Initialize OpenAI client
+
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    # Call OpenAI API
-    if model == "o1-preview":
+
+    if model in ["o1-2024-12-17", "o1-mini-2024-09-12"]:
         response = client.chat.completions.create(
             model=model,
             messages=[
                 {
-                    "role": "user", 
+                    "role": "user",
                     "content": prompt
                 }
             ]
         )
-    else:
+    elif model == "o1-preview-2024-09-12":
         response = client.chat.completions.create(
             model=model,
-            top_p = 1,
-            temperature = 1,
-            n = 1,
-            presence_penalty = 0,
-            frequency_penalty = 0,
             messages=[
                 {
-                    "role": "user", 
+                    "role": "user",
                     "content": prompt
                 }
             ]
         )
+    elif model == "gpt-4o-2024-08-06":
+        response = client.chat.completions.create(
+            model=model,
+            top_p=1,
+            temperature=1,
+            n=1,
+            presence_penalty=0,
+            frequency_penalty=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
+    
     return response
 
 def prompt(model, comps, a, out_heading=None, output_file_path=None):

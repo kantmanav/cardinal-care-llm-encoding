@@ -1,0 +1,35 @@
+covered(C) :-
+    claim.service_type(C, female_contraceptive_counseling),
+    (   claim.type_of_contraceptive_counseling(C, methods)
+    ;   claim.type_of_contraceptive_counseling(C, management_of_side_effects)
+    ;   claim.type_of_contraceptive_counseling(C, adherence)
+    ),
+    (   claim.counseling_setting(C, individual)
+    ;   claim.counseling_setting(C, group)
+    ).
+
+covered(C) :-
+    claim.service_type(C, female_contraceptive_drugs_or_devices_and_follow_up_care),
+    claim.type_of_female_contraceptive_method_provided(C, M),
+    fda_approved_female_contraceptive_method(M),
+    (   not(otc_female_contraceptive_method(M))
+    ;   (otc_female_contraceptive_method(M), claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, yes))
+    ),
+    claim.mode_of_providing_service(C, S),
+    (   S = provided_by
+    ;   S = administered_by
+    ;   S = removed_by
+    ;   S = provided_related_service
+    ;   S = provided_related_supplies
+    ;   S = provided_follow_up_care
+    ).
+
+covered(C) :-
+    claim.service_type(C, female_voluntary_sterilization),
+    claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies(C, T),
+    (   T = tubal_ligation
+    ;   T = sterilization_implants
+    ;   T = related_services
+    ;   T = related_supplies
+    ).
+
