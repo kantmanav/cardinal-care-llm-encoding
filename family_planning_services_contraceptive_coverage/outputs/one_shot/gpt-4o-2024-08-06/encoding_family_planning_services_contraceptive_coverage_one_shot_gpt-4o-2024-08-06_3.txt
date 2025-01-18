@@ -1,0 +1,25 @@
+```prolog
+covered(C) :-
+    claim.service_type(C, female_contraceptive_counseling),
+    claim.type_of_contraceptive_counseling(C, Type),
+    member(Type, [methods, management_of_side_effects, adherence]),
+    claim.counseling_setting(C, Setting),
+    member(Setting, [individual, group]).
+
+covered(C) :-
+    claim.service_type(C, female_contraceptive_drugs_or_devices_and_follow_up_care),
+    claim.type_of_female_contraceptive_method_provided(C, Method),
+    (
+        (claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, yes), otc_female_contraceptive_method(Method));
+        (claim.otc_female_contraceptive_method_is_prescribed_by_provider(C, no), \+ otc_female_contraceptive_method(Method))
+    ),
+    fda_approved_female_contraceptive_method(Method),
+    claim.mode_of_providing_service(C, Mode),
+    member(Mode, [provided_by, administered_by, removed_by, provided_related_service, provided_related_supplies, provided_follow_up_care]).
+
+covered(C) :-
+    claim.service_type(C, female_voluntary_sterilization),
+    claim.type_of_female_voluntary_sterilization_procedure_service_or_supplies(C, Type),
+    member(Type, [tubal_ligation, sterilization_implants, related_services, related_supplies]).
+```
+
