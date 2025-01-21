@@ -1,0 +1,64 @@
+```prolog
+covered(C) :-
+    claim.service_type(C, Service),
+    (Service = ivf_for_fertility_preservation ; Service = cryopreservation_for_fertility_preservation),
+    claim.location_service_received(C, Location),
+    in_network(Location),
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, PlannedService),
+    valid_planned_service(PlannedService),
+    claim.will_be_retrieving_eggs_for_use(C, yes),
+    art_eligibility(C),
+    claim.num_other_covered_art_services(C, Num),
+    Num < 1.
+
+% Define in-network locations
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+% Define valid planned services
+valid_planned_service(chemotherapy).
+valid_planned_service(pelvic_radiotherapy).
+valid_planned_service(gonadotoxic_therapy).
+valid_planned_service(orchiectomy).
+valid_planned_service(oophorectomy).
+valid_planned_service(hysterectomy).
+valid_planned_service(orchiectomy_for_treatment_of_disease).
+valid_planned_service(oophorectomy_for_treatment_of_disease).
+valid_planned_service(other_treatment_demonstrated_to_result_in_infertility).
+
+% ART eligibility based on clinical policy and trials
+art_eligibility(C) :-
+    (
+        claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes)
+    );
+    (
+        claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, no),
+        claim.num_cycles_oral_or_injectable_ovulation_induction(C, N),
+        N >= required_cycles(C)
+    ),
+    (
+        \+ claim.patient_has_premature_ovarian_failure(C, yes)
+    ;
+        premature_ovarian_failure_eligibility(C)
+    ).
+
+% Define required cycles based on age (assuming age is encoded elsewhere)
+required_cycles(C) :-
+    % Placeholder for age-based cycle requirement
+    % This part requires additional information about age
+    % For the purpose of this rule, assume a standard requirement, e.g., 3 cycles
+    3.
+
+% Eligibility for premature ovarian failure
+premature_ovarian_failure_eligibility(C) :-
+    claim.patient_has_premature_ovarian_failure(C, yes),
+    (
+        claim.date_service_received(C, Date),
+        % Additional conditions based on date can be added here
+        true
+    ).
+```
+

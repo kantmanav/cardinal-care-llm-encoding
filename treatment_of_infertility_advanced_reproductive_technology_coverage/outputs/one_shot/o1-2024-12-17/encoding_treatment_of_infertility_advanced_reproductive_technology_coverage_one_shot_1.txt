@@ -1,0 +1,41 @@
+service_type_valid(C) :-
+    claim.service_type(C, ivf_for_fertility_preservation);
+    claim.service_type(C, cryopreservation_for_fertility_preservation).
+
+in_network(C) :-
+    claim.location_service_received(C, stanford_health_care);
+    claim.location_service_received(C, menlo_medical_clinic);
+    claim.location_service_received(C, sutter_health_palo_alto_medical_foundation);
+    claim.location_service_received(C, tier_two_in_network).
+
+not_exceeded_cycle_limit(C) :-
+    claim.num_other_covered_art_services(C, N),
+    lessThan(N, 1).
+
+fertility_preservation_criteria(C) :-
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.patient_has_premature_ovarian_failure(C, no),
+    claim.planned_service(C, P),
+    (
+        P = chemotherapy;
+        P = pelvic_radiotherapy;
+        P = gonadotoxic_therapy;
+        P = orchiectomy;
+        P = oophorectomy;
+        P = hysterectomy;
+        P = other_treatment_demonstrated_to_result_in_infertility
+    ),
+    (
+        claim.will_be_retrieving_eggs_for_use(C, no);
+        (
+            claim.will_be_retrieving_eggs_for_use(C, yes),
+            fact.meets_fsh_and_ovarian_criteria(C)
+        )
+    ).
+
+covered(C) :-
+    service_type_valid(C),
+    in_network(C),
+    not_exceeded_cycle_limit(C),
+    fertility_preservation_criteria(C).
+

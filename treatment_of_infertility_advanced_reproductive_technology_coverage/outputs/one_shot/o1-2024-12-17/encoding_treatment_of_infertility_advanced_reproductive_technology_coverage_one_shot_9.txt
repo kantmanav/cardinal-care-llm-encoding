@@ -1,0 +1,54 @@
+covered(C) :- 
+   % Must be an ART service for fertility preservation
+   (
+      claim.service_type(C, ivf_for_fertility_preservation);
+      claim.service_type(C, cryopreservation_for_fertility_preservation)
+   ),
+   % ART services are not covered out-of-network
+   in_network(C),
+   % Plan design: no more than 1 covered ART course per policy year
+   coverage_limit_not_exceeded(C),
+   % Must meet fertility preservation criteria
+   claim.patient_is_believed_to_be_fertile(C, yes),
+   planned_service_leads_to_infertility(C),
+   meets_ovarian_reserve_criteria_if_eggs_are_retrieved(C).
+
+/* In-network check (ART is not covered out-of-network) */
+in_network(C) :-
+   claim.location_service_received(C, stanford_health_care).
+in_network(C) :-
+   claim.location_service_received(C, menlo_medical_clinic).
+in_network(C) :-
+   claim.location_service_received(C, sutter_health_care_palo_alto_medical_foundation).
+in_network(C) :-
+   claim.location_service_received(C, tier_two_in_network).
+
+/* Enforce the 1 course of ART per policy year limit */
+coverage_limit_not_exceeded(C) :-
+   claim.num_other_covered_art_services(C, N),
+   N < 1.
+
+/* Planned service must be one that is expected to result in infertility */
+planned_service_leads_to_infertility(C) :-
+   claim.planned_service(C, chemotherapy);
+   claim.planned_service(C, pelvic_radiotherapy);
+   claim.planned_service(C, gonadotoxic_therapy);
+   claim.planned_service(C, orchiectomy);
+   claim.planned_service(C, oophorectomy);
+   claim.planned_service(C, hysterectomy);
+   claim.planned_service(C, orchiectomy_for_treatment_of_disease);
+   claim.planned_service(C, oophorectomy_for_treatment_of_disease);
+   claim.planned_service(C, other_treatment_demonstrated_to_result_in_infertility).
+
+/* Must meet applicable ovarian reserve / FSH criteria when retrieving eggs */
+meets_ovarian_reserve_criteria_if_eggs_are_retrieved(C) :-
+   claim.will_be_retrieving_eggs_for_use(C, no).  /* No egg retrieval needed */
+meets_ovarian_reserve_criteria_if_eggs_are_retrieved(C) :-
+   claim.will_be_retrieving_eggs_for_use(C, yes),
+   (
+     /* Either patient has no premature ovarian failure (implying FSH/response OK) */
+     claim.patient_has_premature_ovarian_failure(C, no);
+     /* Or patient has premature ovarian failure but still meets policy criteria */
+     claim.patient_has_premature_ovarian_failure(C, yes)
+   ).
+

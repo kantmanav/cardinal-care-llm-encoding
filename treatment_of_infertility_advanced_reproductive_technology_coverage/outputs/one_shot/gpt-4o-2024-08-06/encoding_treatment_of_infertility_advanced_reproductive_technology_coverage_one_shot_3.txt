@@ -1,0 +1,45 @@
+```prolog
+covered(C) :- 
+    claim.service_type(C, ivf_for_fertility_preservation),
+    claim.location_service_received(C, L),
+    in_network_location(L),
+    claim.num_other_covered_art_services(C, NumCycles),
+    NumCycles < 1,
+    meets_fertility_preservation_criteria(C).
+
+covered(C) :- 
+    claim.service_type(C, cryopreservation_for_fertility_preservation),
+    claim.location_service_received(C, L),
+    in_network_location(L),
+    meets_fertility_preservation_criteria(C).
+
+meets_fertility_preservation_criteria(C) :-
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, PlannedService),
+    fertility_preservation_service(PlannedService),
+    claim.will_be_retrieving_eggs_for_use(C, yes),
+    ovarian_success_likelihood(C).
+
+ovarian_success_likelihood(C) :- 
+    claim.patient_has_premature_ovarian_failure(C, no),
+    claim.age(C, Age),
+    claim.fsh_level(C, FSHLevel),
+    (
+        (Age < 40, FSHLevel < 19);
+        (Age >= 40, FSHLevel < 19)
+    ).
+
+in_network_location(stanford_health_care).
+in_network_location(menlo_medical_clinic).
+in_network_location(sutter_health_palo_alto_medical_foundation).
+in_network_location(tier_two_in_network).
+
+fertility_preservation_service(chemotherapy).
+fertility_preservation_service(pelvic_radiotherapy).
+fertility_preservation_service(gonadotoxic_therapy).
+fertility_preservation_service(orchiectomy).
+fertility_preservation_service(oophorectomy).
+fertility_preservation_service(hysterectomy).
+fertility_preservation_service(other_treatment_demonstrated_to_result_in_infertility).
+```
+

@@ -1,0 +1,27 @@
+```prolog
+covered(C) :-
+    claim.service_type(C, S),
+    ( S = ivf_for_fertility_preservation ; S = cryopreservation_for_fertility_preservation ),
+    claim.location_service_received(C, L),
+    ( L = stanford_health_care ;
+      L = menlo_medical_clinic ;
+      L = sutter_health_palo_alto_medical_foundation ;
+      L = tier_two_in_network ),
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, P),
+    ( P = chemotherapy ;
+      P = pelvic_radiotherapy ;
+      P = gonadotoxic_therapy ;
+      P = orchiectomy ;
+      P = oophorectomy ;
+      P = hysterectomy ;
+      P = orchiectomy_for_treatment_of_disease ;
+      P = oophorectomy_for_treatment_of_disease ;
+      P = other_treatment_demonstrated_to_result_in_infertility ;
+      P = other ),
+    claim.will_be_retrieving_eggs_for_use(C, yes),
+    claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes),
+    claim.num_other_covered_art_services(C, N),
+    N < 1.
+```
+

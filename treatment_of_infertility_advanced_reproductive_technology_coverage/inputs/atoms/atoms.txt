@@ -1,0 +1,29 @@
+Fact: claim.service_type(C, ***)
+Valid inputs: ivf_for_fertility_preservation, cryopreservation_for_fertility_preservation
+
+Fact: claim.location_service_received(C, ***)
+Valid inputs: stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network, other
+
+Fact: claim.patient_is_believed_to_be_fertile(C, ***)
+Valid inputs: yes, no
+
+Fact: claim.planned_service(C, ***)
+Valid inputs: chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, orchiectomy_for_treatment_of_disease, oophorectomy_for_treatment_of_disease, other_treatment_demonstrated_to_result_in_infertility, other
+
+Fact: claim.will_be_retrieving_eggs_for_use(C, ***)
+Valid inputs: yes, no
+
+Fact: claim.patient_has_premature_ovarian_failure(C, ***)
+Valid inputs: yes, no
+
+Fact: claim.date_service_received(C, ***)
+Valid inputs: date
+
+Fact: claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, ***)
+Valid inputs: yes, no
+
+Fact: claim.num_cycles_oral_or_injectable_ovulation_induction(C, ***)
+Valid inputs: number
+
+Fact: claim.num_other_covered_art_services(Claim, ***)
+Valid inputs: number

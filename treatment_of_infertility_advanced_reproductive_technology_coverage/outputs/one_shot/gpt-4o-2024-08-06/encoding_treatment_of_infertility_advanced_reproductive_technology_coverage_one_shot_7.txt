@@ -1,0 +1,61 @@
+```prolog
+covered(C) :-
+    claim.service_type(C, ivf_for_fertility_preservation),
+    claim.location_service_received(C, Location),
+    in_network(Location),
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, PlannedService),
+    fertility_preservation_service(PlannedService),
+    claim.will_be_retrieving_eggs_for_use(C, yes),
+    meets_art_eligibility_criteria(C),
+    within_coverage_limits(C).
+
+covered(C) :-
+    claim.service_type(C, cryopreservation_for_fertility_preservation),
+    claim.location_service_received(C, Location),
+    in_network(Location),
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, PlannedService),
+    fertility_preservation_service(PlannedService),
+    meets_art_eligibility_criteria(C),
+    within_coverage_limits(C).
+
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+fertility_preservation_service(chemotherapy).
+fertility_preservation_service(pelvic_radiotherapy).
+fertility_preservation_service(gonadotoxic_therapy).
+fertility_preservation_service(orchiectomy).
+fertility_preservation_service(oophorectomy).
+fertility_preservation_service(hysterectomy).
+fertility_preservation_service(other_treatment_demonstrated_to_result_in_infertility).
+
+meets_art_eligibility_criteria(C) :-
+    (claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes);
+     meets_ivf_procedure_criteria(C)),
+    meets_ovarian_reserve_and_age_criteria(C).
+
+meets_ivf_procedure_criteria(C) :-
+    claim.date_service_received(C, Date),
+    patient_age_on_date(C, Date, Age),
+    ((Age =< 37, claim.num_cycles_oral_or_injectable_ovulation_induction(C, NumCycles), NumCycles >= 3);
+     Age >= 38).
+
+meets_ovarian_reserve_and_age_criteria(C) :-
+    claim.date_service_received(C, Date),
+    patient_age_on_date(C, Date, Age),
+    ((Age < 40, claim.patient_has_premature_ovarian_failure(C, no), claim.fsh_level(C, FSH), FSH < 19);
+     (Age >= 40, claim.fsh_level_most_recent(C, FSH), FSH < 19)).
+
+within_coverage_limits(C) :-
+    claim.num_other_covered_art_services(C, Num),
+    Num < 1.
+
+patient_age_on_date(C, Date, Age) :-
+    claim.date_of_birth(C, DOB),
+    Age is Date.year - DOB.year - (DOB.month > Date.month; (DOB.month == Date.month, DOB.day > Date.day)).
+```
+

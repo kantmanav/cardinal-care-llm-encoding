@@ -1,0 +1,28 @@
+```prolog
+covered(C) :-
+    claim.service_type(C, ivf_for_fertility_preservation),
+    claim.location_service_received(C, Location),
+    Location \= other,
+    (claim.patient_is_believed_to_be_fertile(C, yes) ->
+        claim.planned_service(C, PlannedService),
+        (PlannedService = chemotherapy;
+         PlannedService = pelvic_radiotherapy;
+         PlannedService = gonadotoxic_therapy;
+         PlannedService = orchiectomy;
+         PlannedService = oophorectomy;
+         PlannedService = hysterectomy;
+         PlannedService = orchiectomy_for_treatment_of_disease;
+         PlannedService = oophorectomy_for_treatment_of_disease;
+         PlannedService = other_treatment_demonstrated_to_result_in_infertility),
+        claim.will_be_retrieving_eggs_for_use(C, yes)
+    ;
+        true
+    ),
+    claim.patient_has_premature_ovarian_failure(C, yes),
+    claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes),
+    claim.num_cycles_oral_or_injectable_ovulation_induction(C, NumCycles),
+    NumCycles >= 3,
+    claim.num_other_covered_art_services(C, NumARTServices),
+    NumARTServices < 1.
+```
+

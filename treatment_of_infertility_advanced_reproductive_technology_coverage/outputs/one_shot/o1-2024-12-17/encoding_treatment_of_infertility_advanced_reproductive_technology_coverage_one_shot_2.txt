@@ -1,0 +1,62 @@
+covered(C) :-
+    /* 1) Must be one of the covered ART fertility preservation services */
+    claim.service_type(C, ServiceType),
+    (
+       ServiceType = ivf_for_fertility_preservation
+    ;
+       ServiceType = cryopreservation_for_fertility_preservation
+    ),
+
+    /* 2) ART services are not covered out-of-network */
+    claim.location_service_received(C, Location),
+    in_network(Location),
+
+    /* 3) Check yearly ART cycle limit (Aetna Student Health Plan) */
+    claim.num_other_covered_art_services(C, NumUsed),
+    NumUsed < 1,
+
+    /* 4) Criteria for fertility preservation */
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, Planned),
+    causes_infertility(Planned),
+
+    /* 5) If eggs will be retrieved, must satisfy FSH/ovarian reserve criteria per Aetna Infertility Policy */
+    (
+       claim.will_be_retrieving_eggs_for_use(C, no)
+    ;
+       (
+         claim.will_be_retrieving_eggs_for_use(C, yes),
+         meets_ovarian_reserve_criteria(C)
+       )
+    ).
+
+/* Location is in-network (ART services are not provided out-of-network) */
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+/* Planned procedures that lead to infertility */
+causes_infertility(chemotherapy).
+causes_infertility(pelvic_radiotherapy).
+causes_infertility(gonadotoxic_therapy).
+causes_infertility(orchiectomy).
+causes_infertility(oophorectomy).
+causes_infertility(hysterectomy).
+causes_infertility(orchiectomy_for_treatment_of_disease).
+causes_infertility(oophorectomy_for_treatment_of_disease).
+causes_infertility(other_treatment_demonstrated_to_result_in_infertility).
+
+/* Placeholder for FSH/ovarian reserve requirements, 
+   including age-based and premature ovarian failure criteria from 
+   Aetna Infertility Clinical Policy and Plan Design. 
+   This can be further expanded if age or FSH facts are provided. */
+meets_ovarian_reserve_criteria(C) :-
+    /* Either no evidence of poor ovarian reserve 
+       or coverage allowed under premature ovarian failure logic */
+    (
+      claim.patient_has_premature_ovarian_failure(C, no)
+    ;
+      claim.patient_has_premature_ovarian_failure(C, yes)
+    ).
+

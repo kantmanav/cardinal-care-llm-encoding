@@ -25,7 +25,7 @@ def get_relevant_files(benefit_name, base_path):
     """
     benefit_path = os.path.join(base_path, benefit_name)
     prompt_file = os.path.join(benefit_path, "inputs", "prompts", "one_shot_prompt.txt")
-    policy_file = os.path.join(benefit_path, "data", f"{benefit_name}_benefit_doc.txt")
+    policy_file = os.path.join(benefit_path, "data", f"{benefit_name}_doc.txt")
     atoms_file = os.path.join(benefit_path, "inputs", "atoms", "atoms.txt")
     output_dir = os.path.join(benefit_path, "outputs", "one_shot")
     
@@ -44,7 +44,7 @@ def encode(encode_prompt, policy, atoms, out_dir, model, benefit, methodology, e
     Generate the encoding and save the output file.
     """
     # Construct output file name
-    encoding = os.path.join(out_dir, model, f"encoding_{benefit}_{methodology}_{model}_{exp_num}.txt")
+    encoding = os.path.join(out_dir, model, f"encoding_{benefit}_{methodology}_{exp_num}.txt")
     
     # Call the prompt function
     prompt(

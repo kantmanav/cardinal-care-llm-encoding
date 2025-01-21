@@ -1,0 +1,47 @@
+```prolog
+covered(C) :- 
+    claim.service_type(C, Service),
+    Service \= other,
+    claim.location_service_received(C, Location),
+    (Location = stanford_health_care; 
+    Location = menlo_medical_clinic; 
+    Location = sutter_health_palo_alto_medical_foundation; 
+    Location = tier_two_in_network),
+    (claim.num_other_covered_art_services(C, NumART), NumART < 1),
+    claim.date_service_received(C, Date),
+    claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, IVFEffOnly),
+    (
+        Service = ivf_for_fertility_preservation,
+        claim.patient_is_believed_to_be_fertile(C, yes),
+        claim.will_be_retrieving_eggs_for_use(C, yes),
+        (
+            claim.planned_service(C, chemotherapy); 
+            claim.planned_service(C, pelvic_radiotherapy);
+            claim.planned_service(C, gonadotoxic_therapy);
+            claim.planned_service(C, orchiectomy);
+            claim.planned_service(C, oophorectomy);
+            claim.planned_service(C, hysterectomy);
+            claim.planned_service(C, orchiectomy_for_treatment_of_disease);
+            claim.planned_service(C, oophorectomy_for_treatment_of_disease);
+            claim.planned_service(C, other_treatment_demonstrated_to_result_in_infertility)
+        ),
+        (IVFEffOnly = yes ; claim.patient_has_premature_ovarian_failure(C, yes));
+        (
+          Service = cryopreservation_for_fertility_preservation,
+          claim.patient_is_believed_to_be_fertile(C, yes),
+          claim.planned_service(C, PlannedService),
+          (
+            PlannedService = chemotherapy;
+            PlannedService = pelvic_radiotherapy;
+            PlannedService = gonadotoxic_therapy;
+            PlannedService = orchiectomy;
+            PlannedService = oophorectomy;
+            PlannedService = hysterectomy;
+            PlannedService = orchiectomy_for_treatment_of_disease;
+            PlannedService = oophorectomy_for_treatment_of_disease;
+            PlannedService = other_treatment_demonstrated_to_result_in_infertility
+          )
+        )
+    ).
+```
+
