@@ -1,0 +1,68 @@
+```prolog
+% Importing the necessary files
+:- import('../../rules.hrf').
+:- import('../../../../Cardinal Care Core/Precertification Required/rules.hrf').
+:- import('../../Non-basic Infertility Services/rules.hrf').
+
+% Define the covered rule
+covered(C) :-
+    claim.service_type(C, ServiceType),
+    ServiceType = ivf_for_fertility_preservation,
+    service_received_at_valid_provider(C),
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, PlannedService),
+    member(PlannedService, [
+        chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy,
+        orchiectomy, oophorectomy, hysterectomy,
+        other_treatment_demonstrated_to_result_in_infertility
+    ]),
+    claim.will_be_retrieving_eggs_for_use(C, yes),
+    check_egg_retrieval_criteria(C),
+    meets_ivf_medical_necessity(C) &
+    precertified_if_necessary(C),
+    ~beyond_art_cycle_limits(C).
+
+% ART service has additional conditions
+beyond_art_cycle_limits(C) :-
+    claim.num_other_covered_art_services(C, Number),
+    Number >= 1.
+
+check_egg_retrieval_criteria(C) :-
+    claim.service_type(C, ServiceType),
+    ServiceType = ivf_for_fertility_preservation,
+    most_recent_day_3_fsh_test(C, fsh_test(Level, Date, Time)),
+    less(Level, 19).
+
+meets_ivf_medical_necessity(C) :-
+    (claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes);
+     meets_cpb_egg_sperm_contact_trial_reqs(C)),
+    check_fsh_levels_based_on_age(C).
+
+check_fsh_levels_based_on_age(C):-
+    patient_age_at_time_of_service(C, Age) &
+    (Age < 39 -> check_fsh_levels_for_under_39(C);
+    Age >= 39 -> check_fsh_levels_for_over_39(C)).
+
+check_fsh_levels_for_under_39(C) :-
+    most_recent_day_3_fsh_test(C, fsh_test(Level, Date, Time)) &
+    less(Level, 19).
+
+check_fsh_levels_for_over_39(C) :-
+    day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+    ~exists_test_with_level_at_least_19(Tests).
+
+% Additional clause for cryopreservation service type
+covered(C) :-
+    claim.service_type(C, cryopreservation_for_fertility_preservation),
+    service_received_at_valid_provider(C),
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    claim.planned_service(C, PlannedService),
+    member(PlannedService, [
+        chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy,
+        orchiectomy, oophorectomy, hysterectomy,
+        other_treatment_demonstrated_to_result_in_infertility
+    ]),
+    claim.will_be_retrieving_eggs_for_use(C, yes) &
+    check_egg_retrieval_criteria(C).
+```
+
