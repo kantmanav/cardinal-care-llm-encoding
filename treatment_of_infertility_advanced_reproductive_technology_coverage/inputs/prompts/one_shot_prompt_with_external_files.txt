@@ -7,9 +7,8 @@
         - Under each of these claim-specific facts, I have listed the valid inputs (in some cases the type of valid input such as number or date) for the fact (which can be filled in for the ***).
 	- Others are of the form 'fact(***)', meaning they are not specific to the claim and will be defined generally by filling in a value for ***.
 - Please write your Epilog rule, 'covered(C)', in such a manner that it uses these atoms AND ONLY THESE ATOMS to determine whether the claim 'C' on the policy is eligible for coverage, taking into account all of the contract’s coverage details, exclusions, and conditions.
-- I have also provided a list of external files.
-	- Each file (exluding "sub-imports") is listed under “Files to Import” with its file path.
+- I have also provided a list of external files which you will import at the start of your encoding.
+	- Each file is listed under “Files to Import” with its file path.
 	- The contents of each file are given below, with the start and end of each file clearly delineated by -----.
 	- For files that import other files, I have noted the imported files under “Sub-imports” in the corresponding section.
-	- Use the contents of these files as part of your knowledge when creating the encoding, but DO NOT include any direct imports in your output.
 - Return only Epilog code in your reply. NO EXPLANATION is necessary.
