@@ -10,5 +10,4 @@
 - I have also provided a list of external files which you will import at the start of your encoding.
 	- Each file is listed under “Files to Import” with its file path.
 	- The contents of each file are given below, with the start and end of each file clearly delineated by -----.
-	- For files that import other files, I have noted the imported files under “Sub-imports” in the corresponding section.
 - Return only Epilog code in your reply. NO EXPLANATION is necessary.

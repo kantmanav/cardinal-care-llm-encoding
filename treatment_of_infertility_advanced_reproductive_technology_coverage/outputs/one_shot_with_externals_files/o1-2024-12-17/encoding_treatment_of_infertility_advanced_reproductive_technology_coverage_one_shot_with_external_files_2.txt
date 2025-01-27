@@ -1,0 +1,66 @@
+@include("../../rules.hrf").
+@include("../../../../Cardinal Care Core/Precertification Required/rules.hrf").
+@include("../../Non-basic Infertility Services/rules.hrf").
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Helper: In-network location
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+in_network_location(C) :-
+  claim.location_service_received(C, L) &
+  (
+    L = stanford_health_care ;
+    L = menlo_medical_clinic ;
+    L = sutter_health_palo_alto_medical_foundation ;
+    L = tier_two_in_network
+  ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Helper: Check that the service type is an ART fertility preservation service
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+is_fertility_preservation_service(C) :-
+  claim.service_type(C, S) &
+  (
+    S = ivf_for_fertility_preservation ;
+    S = cryopreservation_for_fertility_preservation
+  ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Helper: Check that member has not exceeded max number of ART cycles per policy year
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+not_exceeding_cycle_limits(C) :-
+  claim.num_other_covered_art_services(C, N) &
+  less(N, 1).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Helper: Meets specific fertility preservation criteria
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+meets_fertility_preservation_criteria(C) :-
+  claim.patient_is_believed_to_be_fertile(C, yes) &
+  claim.planned_service(C, P) &
+  (
+    P = chemotherapy ;
+    P = pelvic_radiotherapy ;
+    P = gonadotoxic_therapy ;
+    P = orchiectomy ;
+    P = oophorectomy ;
+    P = hysterectomy ;
+    P = other_treatment_demonstrated_to_result_in_infertility
+  ) &
+  (
+    claim.will_be_retrieving_eggs_for_use(C, no)
+    ;
+    (
+      claim.will_be_retrieving_eggs_for_use(C, yes) &
+      claim.patient_has_premature_ovarian_failure(C, no)
+    )
+  ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Main Coverage Rule
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+covered(C) :-
+  is_fertility_preservation_service(C) &
+  in_network_location(C) &
+  not_exceeding_cycle_limits(C) &
+  meets_fertility_preservation_criteria(C).
+
