@@ -1,62 +1,36 @@
-covered(C) :-
-    /* 1) Must be one of the covered ART fertility preservation services */
-    claim.service_type(C, ServiceType),
-    (
-       ServiceType = ivf_for_fertility_preservation
-    ;
-       ServiceType = cryopreservation_for_fertility_preservation
-    ),
+covered(C) :-  
+    /* Must be one of the covered service types (IVF or cryopreservation) */  
+    claim.service_type(C, T),  
+    (T = ivf_for_fertility_preservation ; T = cryopreservation_for_fertility_preservation),  
 
-    /* 2) ART services are not covered out-of-network */
-    claim.location_service_received(C, Location),
-    in_network(Location),
+    /* Must be in-network */  
+    claim.location_service_received(C, Loc),  
+    Loc \= other,  
 
-    /* 3) Check yearly ART cycle limit (Aetna Student Health Plan) */
-    claim.num_other_covered_art_services(C, NumUsed),
-    NumUsed < 1,
+    /* Must not exceed the plan's 1-course-per-year limit */  
+    claim.num_other_covered_art_services(C, N),  
+    N < 1,  
 
-    /* 4) Criteria for fertility preservation */
-    claim.patient_is_believed_to_be_fertile(C, yes),
-    claim.planned_service(C, Planned),
-    causes_infertility(Planned),
+    /* Must meet fertility preservation criteria */  
+    claim.patient_is_believed_to_be_fertile(C, yes),  
+    claim.planned_service(C, S),  
+    ( S = chemotherapy  
+    ; S = pelvic_radiotherapy  
+    ; S = gonadotoxic_therapy  
+    ; S = orchiectomy  
+    ; S = oophorectomy  
+    ; S = hysterectomy  
+    ; S = other_treatment_demonstrated_to_result_in_infertility  
+    ),  
 
-    /* 5) If eggs will be retrieved, must satisfy FSH/ovarian reserve criteria per Aetna Infertility Policy */
-    (
-       claim.will_be_retrieving_eggs_for_use(C, no)
-    ;
-       (
-         claim.will_be_retrieving_eggs_for_use(C, yes),
-         meets_ovarian_reserve_criteria(C)
-       )
-    ).
-
-/* Location is in-network (ART services are not provided out-of-network) */
-in_network(stanford_health_care).
-in_network(menlo_medical_clinic).
-in_network(sutter_health_palo_alto_medical_foundation).
-in_network(tier_two_in_network).
-
-/* Planned procedures that lead to infertility */
-causes_infertility(chemotherapy).
-causes_infertility(pelvic_radiotherapy).
-causes_infertility(gonadotoxic_therapy).
-causes_infertility(orchiectomy).
-causes_infertility(oophorectomy).
-causes_infertility(hysterectomy).
-causes_infertility(orchiectomy_for_treatment_of_disease).
-causes_infertility(oophorectomy_for_treatment_of_disease).
-causes_infertility(other_treatment_demonstrated_to_result_in_infertility).
-
-/* Placeholder for FSH/ovarian reserve requirements, 
-   including age-based and premature ovarian failure criteria from 
-   Aetna Infertility Clinical Policy and Plan Design. 
-   This can be further expanded if age or FSH facts are provided. */
-meets_ovarian_reserve_criteria(C) :-
-    /* Either no evidence of poor ovarian reserve 
-       or coverage allowed under premature ovarian failure logic */
-    (
-      claim.patient_has_premature_ovarian_failure(C, no)
-    ;
-      claim.patient_has_premature_ovarian_failure(C, yes)
-    ).
+    /* If IVF, must additionally meet ART eligibility/trial requirements */  
+    ( T = cryopreservation_for_fertility_preservation  
+    ; ( T = ivf_for_fertility_preservation,  
+        claim.will_be_retrieving_eggs_for_use(C, yes),  
+        ( claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes)  
+        ; claim.patient_has_premature_ovarian_failure(C, yes)  
+        ; (claim.num_cycles_oral_or_injectable_ovulation_induction(C, Ind), Ind >= 3)  
+        )  
+      )  
+    ).  
 

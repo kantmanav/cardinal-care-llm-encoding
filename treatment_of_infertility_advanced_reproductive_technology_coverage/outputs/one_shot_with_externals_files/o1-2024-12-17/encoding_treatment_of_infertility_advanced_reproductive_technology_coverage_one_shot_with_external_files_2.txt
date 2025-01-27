@@ -1,66 +1,59 @@
-@include("../../rules.hrf").
-@include("../../../../Cardinal Care Core/Precertification Required/rules.hrf").
-@include("../../Non-basic Infertility Services/rules.hrf").
+:- include('../../rules.hrf').
+:- include('../../../../Cardinal Care Core/Precertification Required/rules.hrf').
+:- include('../../Non-basic Infertility Services/rules.hrf').
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Helper: In-network location
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-in_network_location(C) :-
-  claim.location_service_received(C, L) &
-  (
-    L = stanford_health_care ;
-    L = menlo_medical_clinic ;
-    L = sutter_health_palo_alto_medical_foundation ;
-    L = tier_two_in_network
-  ).
+% In-network locations
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_care_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Helper: Check that the service type is an ART fertility preservation service
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-is_fertility_preservation_service(C) :-
-  claim.service_type(C, S) &
-  (
-    S = ivf_for_fertility_preservation ;
-    S = cryopreservation_for_fertility_preservation
-  ).
+% Planned services that result in infertility
+planned_service_leads_to_infertility(chemotherapy).
+planned_service_leads_to_infertility(pelvic_radiotherapy).
+planned_service_leads_to_infertility(gonadotoxic_therapy).
+planned_service_leads_to_infertility(orchiectomy).
+planned_service_leads_to_infertility(oophorectomy).
+planned_service_leads_to_infertility(hysterectomy).
+planned_service_leads_to_infertility(orchiectomy_for_treatment_of_disease).
+planned_service_leads_to_infertility(oophorectomy_for_treatment_of_disease).
+planned_service_leads_to_infertility(other_treatment_demonstrated_to_result_in_infertility).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Helper: Check that member has not exceeded max number of ART cycles per policy year
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-not_exceeding_cycle_limits(C) :-
-  claim.num_other_covered_art_services(C, N) &
-  less(N, 1).
+% IVF criteria for advanced reproductive technology (ART)
+meets_ivf_art_criteria(C) :-
+    claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes).
+meets_ivf_art_criteria(C) :-
+    claim.num_cycles_oral_or_injectable_ovulation_induction(C, N),
+    N >= 3.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Helper: Meets specific fertility preservation criteria
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-meets_fertility_preservation_criteria(C) :-
-  claim.patient_is_believed_to_be_fertile(C, yes) &
-  claim.planned_service(C, P) &
-  (
-    P = chemotherapy ;
-    P = pelvic_radiotherapy ;
-    P = gonadotoxic_therapy ;
-    P = orchiectomy ;
-    P = oophorectomy ;
-    P = hysterectomy ;
-    P = other_treatment_demonstrated_to_result_in_infertility
-  ) &
-  (
-    claim.will_be_retrieving_eggs_for_use(C, no)
-    ;
-    (
-      claim.will_be_retrieving_eggs_for_use(C, yes) &
-      claim.patient_has_premature_ovarian_failure(C, no)
-    )
-  ).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Main Coverage Rule
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Main coverage rule
 covered(C) :-
-  is_fertility_preservation_service(C) &
-  in_network_location(C) &
-  not_exceeding_cycle_limits(C) &
-  meets_fertility_preservation_criteria(C).
+    % Must be an ART service for fertility preservation
+    claim.service_type(C, ServiceType),
+    ( ServiceType = ivf_for_fertility_preservation
+    ; ServiceType = cryopreservation_for_fertility_preservation
+    ),
+
+    % Must be in-network
+    claim.location_service_received(C, Loc),
+    in_network(Loc),
+
+    % Must not exceed the 1-course-per-year limit
+    claim.num_other_covered_art_services(C, NumPrior),
+    NumPrior < 1,
+
+    % Must meet fertility preservation criteria (believed fertile or POF) 
+    ( claim.patient_is_believed_to_be_fertile(C, yes)
+    ; claim.patient_has_premature_ovarian_failure(C, yes)
+    ),
+
+    % Must have a planned service that results in infertility
+    claim.planned_service(C, Planned),
+    planned_service_leads_to_infertility(Planned),
+
+    % If it is IVF for fertility preservation, then must also meet IVF requirements
+    ( ServiceType = cryopreservation_for_fertility_preservation
+      -> true
+      ; meets_ivf_art_criteria(C)
+    ).
 

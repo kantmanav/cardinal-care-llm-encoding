@@ -3,98 +3,140 @@
 :- include('../../Non-basic Infertility Services/rules.hrf').
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Main coverage rule (overrides the placeholder in Cardinal Care Core)
+%%% Main Coverage Rule
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 covered(C) :-
-    service_received_at_valid_provider(C) &
-    covered_under_cardinal_care_24_25_benefit_infertility(C) &
-    precertified_if_necessary(C) &
-    ~beyond_art_cycle_limit(C) &
-    claim.exclusions(C, nil).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Coverage under this infertility benefit
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-covered_under_cardinal_care_24_25_benefit_infertility(C) :-
-    claim.service_type(C, ServiceType) &
-    is_fertility_preservation_service(ServiceType) &
-    fertility_preservation_eligible(C).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% ART service check for fertility preservation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-is_fertility_preservation_service(ivf_for_fertility_preservation).
-is_fertility_preservation_service(cryopreservation_for_fertility_preservation).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Eligibility for fertility preservation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fertility_preservation_eligible(C) :-
-    claim.patient_is_believed_to_be_fertile(C, yes) &
-    claim.planned_service(C, Planned) &
-    will_result_in_infertility(Planned) &
     (
-      claim.will_be_retrieving_eggs_for_use(C, no)
-      ;
-      (
-        claim.will_be_retrieving_eggs_for_use(C, yes) &
-        meets_ovarian_reserve_criteria(C)
-      )
-    ).
-
-will_result_in_infertility(chemotherapy).
-will_result_in_infertility(pelvic_radiotherapy).
-will_result_in_infertility(gonadotoxic_therapy).
-will_result_in_infertility(orchiectomy).
-will_result_in_infertility(oophorectomy).
-will_result_in_infertility(hysterectomy).
-will_result_in_infertility(other_treatment_demonstrated_to_result_in_infertility).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Ovarian reserve and FSH criteria
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-meets_ovarian_reserve_criteria(C) :-
-    patient_age_at_time_of_service(C, Age),
-    (
-      % Under 40
-      less(Age, 40) &
-      (
-        % If no premature ovarian failure, must have most recent FSH < 19
-        ( claim.patient_has_premature_ovarian_failure(C, no) &
-          most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)) &
-          less(Level, 19)
-        )
-        ;
-        % If POF, covered up to age 45
-        ( claim.patient_has_premature_ovarian_failure(C, yes) &
-          less(Age, 45)
-        )
-      )
+      claim.service_type(C, cryopreservation_for_fertility_preservation)
+      & coverage_for_cryopreservation_fertpres(C)
     )
     ;
     (
-      % 40 or older
-      leq(40, Age),
-      less(Age, 45),
-      (
-        % If POF at or after 40, need most recent FSH < 19
-        ( claim.patient_has_premature_ovarian_failure(C, yes) &
-          most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)) &
-          less(Level, 19)
-        )
-        ;
-        % If no POF at or after 40, all day 3 FSH tests since 40 must be < 19
-        ( claim.patient_has_premature_ovarian_failure(C, no) &
-          day_3_fsh_tests_since_age_40_in_claim(C, Tests) &
-          ~exists_test_with_level_at_least_19(Tests)
-        )
-      )
+      claim.service_type(C, ivf_for_fertility_preservation)
+      & coverage_for_ivf_fertpres(C)
     ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% ART cycle limit
+%%% Coverage for Cryopreservation (Fertility Preservation)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-beyond_art_cycle_limit(C) :-
-    claim.num_other_covered_art_services(C, N) &
-    leq(1, N).  % plan allows only 1 course of treatment per policy year
+
+coverage_for_cryopreservation_fertpres(C) :-
+    is_in_network(C)
+    & not_exceeded_cycle_limit(C)
+    & claim.patient_is_believed_to_be_fertile(C, yes)
+    & claim.planned_service(C, PS)
+    & (
+         PS = chemotherapy
+         ;
+         PS = pelvic_radiotherapy
+         ;
+         PS = gonadotoxic_therapy
+         ;
+         PS = orchiectomy
+         ;
+         PS = oophorectomy
+         ;
+         PS = hysterectomy
+         ;
+         PS = orchiectomy_for_treatment_of_disease
+         ;
+         PS = oophorectomy_for_treatment_of_disease
+         ;
+         PS = other_treatment_demonstrated_to_result_in_infertility
+       )
+    & (
+         ( claim.will_be_retrieving_eggs_for_use(C, no) )
+         ;
+         (
+           claim.will_be_retrieving_eggs_for_use(C, yes)
+           & meets_ovarian_reserve_criteria(C)
+         )
+       ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Coverage for IVF (Fertility Preservation)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+coverage_for_ivf_fertpres(C) :-
+    is_in_network(C)
+    & not_exceeded_cycle_limit(C)
+    & claim.patient_is_believed_to_be_fertile(C, yes)
+    & claim.planned_service(C, PS)
+    & (
+         PS = chemotherapy
+         ;
+         PS = pelvic_radiotherapy
+         ;
+         PS = gonadotoxic_therapy
+         ;
+         PS = orchiectomy
+         ;
+         PS = oophorectomy
+         ;
+         PS = hysterectomy
+         ;
+         PS = orchiectomy_for_treatment_of_disease
+         ;
+         PS = oophorectomy_for_treatment_of_disease
+         ;
+         PS = other_treatment_demonstrated_to_result_in_infertility
+       )
+    & meets_ovarian_reserve_criteria(C).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Network Check
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+is_in_network(C) :-
+    claim.location_service_received(C, L)
+    & (
+         L = stanford_health_care
+         ;
+         L = menlo_medical_clinic
+         ;
+         L = sutter_health_palo_alto_medical_foundation
+         ;
+         L = tier_two_in_network
+       ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Cycle Limit Check
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+not_exceeded_cycle_limit(C) :-
+    claim.num_other_covered_art_services(C, N)
+    & less(N, 1).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Ovarian Reserve Criteria
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+meets_ovarian_reserve_criteria(C) :-
+    % Premature Ovarian Failure, coverage until age 45, most recent D3 FSH < 19
+    (
+      claim.patient_has_premature_ovarian_failure(C, yes)
+      & patient_age_at_time_of_service(C, Age)
+      & leq(Age, 45)
+      & most_recent_day_3_fsh_test(C, fsh_test(Level, _, _))
+      & less(Level, 19)
+    )
+    ;
+    % Under 40, most recent D3 FSH < 19
+    (
+      claim.patient_has_premature_ovarian_failure(C, no)
+      & patient_age_at_time_of_service(C, Age)
+      & less(Age, 40)
+      & most_recent_day_3_fsh_test(C, fsh_test(Level, _, _))
+      & less(Level, 19)
+    )
+    ;
+    % 40 or older (no POF), all D3 FSH tests since age 40 < 19
+    (
+      claim.patient_has_premature_ovarian_failure(C, no)
+      & patient_age_at_time_of_service(C, Age)
+      & leq(40, Age)
+      & day_3_fsh_tests_since_age_40_in_claim(C, Tests)
+      & ~exists_test_with_level_at_least_19(Tests)
+    ).
 

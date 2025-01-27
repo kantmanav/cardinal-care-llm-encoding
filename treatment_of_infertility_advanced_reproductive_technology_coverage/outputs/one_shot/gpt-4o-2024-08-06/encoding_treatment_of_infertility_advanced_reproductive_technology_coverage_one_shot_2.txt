@@ -2,51 +2,47 @@
 covered(C) :-
     claim.service_type(C, ivf_for_fertility_preservation),
     claim.location_service_received(C, Location),
-    (Location == stanford_health_care;
-     Location == menlo_medical_clinic;
-     Location == sutter_health_palo_alto_medical_foundation;
-     Location == tier_two_in_network),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
     claim.patient_is_believed_to_be_fertile(C, yes),
     claim.planned_service(C, PlannedService),
-    (PlannedService == chemotherapy;
-     PlannedService == pelvic_radiotherapy;
-     PlannedService == gonadotoxic_therapy;
-     PlannedService == orchiectomy;
-     PlannedService == oophorectomy;
-     PlannedService == hysterectomy;
-     PlannedService == orchiectomy_for_treatment_of_disease;
-     PlannedService == oophorectomy_for_treatment_of_disease;
-     PlannedService == other_treatment_demonstrated_to_result_in_infertility),
+    member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, other_treatment_demonstrated_to_result_in_infertility]),
     claim.will_be_retrieving_eggs_for_use(C, yes),
-    claim.date_service_received(C, Date),
-    (claim.patient_has_premature_ovarian_failure(C, yes);
-     (claim.patient_has_premature_ovarian_failure(C, no),
-      claim.num_other_covered_art_services(C, NumOtherART),
-      NumOtherART < 1,
-      (claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes);
-       claim.num_cycles_oral_or_injectable_ovulation_induction(C, NumCycles),
-       (NumCycles >= 3;
-        (NumCycles >= 0,
-         claim.age(C, Age),
-         Age >= 38))))).
+    claim.num_other_covered_art_services(C, NumCycles),
+    NumCycles < 1.
 
 covered(C) :-
     claim.service_type(C, cryopreservation_for_fertility_preservation),
     claim.location_service_received(C, Location),
-    (Location == stanford_health_care;
-     Location == menlo_medical_clinic;
-     Location == sutter_health_palo_alto_medical_foundation;
-     Location == tier_two_in_network),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
     claim.patient_is_believed_to_be_fertile(C, yes),
     claim.planned_service(C, PlannedService),
-    (PlannedService == chemotherapy;
-     PlannedService == pelvic_radiotherapy;
-     PlannedService == gonadotoxic_therapy;
-     PlannedService == orchiectomy;
-     PlannedService == oophorectomy;
-     PlannedService == hysterectomy;
-     PlannedService == orchiectomy_for_treatment_of_disease;
-     PlannedService == oophorectomy_for_treatment_of_disease;
-     PlannedService == other_treatment_demonstrated_to_result_in_infertility).
+    member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, other_treatment_demonstrated_to_result_in_infertility]),
+    claim.will_be_retrieving_eggs_for_use(C, yes),
+    claim.num_other_covered_art_services(C, NumCycles),
+    NumCycles < 1.
+   
+covered(C) :-
+    claim.location_service_received(C, Location),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
+    claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes),
+    claim.num_other_covered_art_services(C, NumCycles),
+    NumCycles < 1.
+   
+covered(C) :-
+    claim.num_cycles_oral_or_injectable_ovulation_induction(C, NumCycles),
+    NumCycles >= 3,
+    claim.location_service_received(C, Location),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
+    claim.num_other_covered_art_services(C, NumCyclesCovered),
+    NumCyclesCovered < 1.
+
+covered(C) :-
+    claim.patient_has_premature_ovarian_failure(C, yes),
+    claim.date_service_received(C, Date),
+    current_date(CurrentDate),
+    age_at_date(C, Date, Age),
+    Age < 45,
+    claim.num_other_covered_art_services(C, NumCyclesCovered),
+    NumCyclesCovered < 1.
 ```
 

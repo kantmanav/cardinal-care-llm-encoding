@@ -1,41 +1,27 @@
 covered(C) :-
-   % Must be one of the covered ART services for fertility preservation
-   ( claim.service_type(C, ivf_for_fertility_preservation)
-     ; claim.service_type(C, cryopreservation_for_fertility_preservation)
-   ),
-   % ART services are covered only in-network
-   claim.location_service_received(C, Loc),
-   Loc \= other,
-
-   % Must not exceed plan’s 1-cycle limit
-   claim.num_other_covered_art_services(C, PrevCycles),
-   PrevCycles < 1,
-
-   % Fertility preservation requires the patient to be believed fertile
-   claim.patient_is_believed_to_be_fertile(C, yes),
-
-   % And to have a planned service that will likely result in infertility
-   claim.planned_service(C, PS),
-   ( PS = chemotherapy
-     ; PS = pelvic_radiotherapy
-     ; PS = gonadotoxic_therapy
-     ; PS = orchiectomy
-     ; PS = oophorectomy
-     ; PS = hysterectomy
-     ; PS = other_treatment_demonstrated_to_result_in_infertility
-   ),
-
-   % If retrieving eggs, must meet ovarian reserve/FSH criteria or have POF
-   ( claim.will_be_retrieving_eggs_for_use(C, no)
-     ; ( claim.will_be_retrieving_eggs_for_use(C, yes),
-         ( claim.patient_has_premature_ovarian_failure(C, yes)
-           ; fact(meets_day3_fsh_criteria(C))
-         )
-       )
-   ).
-
-% Placeholder facts for referencing external criteria if needed.
-% fact(meets_day3_fsh_criteria(C)).
-% Additional rules for age-based or other clinical-policy requirements
-% can be asserted similarly.
+    % Must be an ART service for fertility preservation
+    ( claim.service_type(C, ivf_for_fertility_preservation)
+    ; claim.service_type(C, cryopreservation_for_fertility_preservation)
+    ),
+    % ART services are not covered out-of-network
+    claim.location_service_received(C, Loc),
+    Loc \= other,
+    % Must not exceed one covered cycle/course of treatment per policy year
+    claim.num_other_covered_art_services(C, Used),
+    Used < 1,
+    % Must be believed to be fertile
+    claim.patient_is_believed_to_be_fertile(C, yes),
+    % Must have a planned service that will result in infertility
+    claim.planned_service(C, Svc),
+    member(Svc, [
+        chemotherapy,
+        pelvic_radiotherapy,
+        gonadotoxic_therapy,
+        orchiectomy,
+        oophorectomy,
+        hysterectomy,
+        orchiectomy_for_treatment_of_disease,
+        oophorectomy_for_treatment_of_disease,
+        other_treatment_demonstrated_to_result_in_infertility
+    ]).
 

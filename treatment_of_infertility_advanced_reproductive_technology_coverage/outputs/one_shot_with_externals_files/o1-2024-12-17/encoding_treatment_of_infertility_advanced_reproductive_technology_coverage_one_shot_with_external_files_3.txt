@@ -1,75 +1,45 @@
-:- include('../../rules.hrf').
-:- include('../../../../Cardinal Care Core/Precertification Required/rules.hrf').
-:- include('../../Non-basic Infertility Services/rules.hrf').
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Helper rules for location and planned services
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-in_network(C) :-
-  claim.location_service_received(C, stanford_health_care).
-in_network(C) :-
-  claim.location_service_received(C, menlo_medical_clinic).
-in_network(C) :-
-  claim.location_service_received(C, sutter_health_palo_alto_medical_foundation).
-in_network(C) :-
-  claim.location_service_received(C, tier_two_in_network).
-
-planned_infertility_service(C) :-
-  claim.planned_service(C, chemotherapy).
-planned_infertility_service(C) :-
-  claim.planned_service(C, pelvic_radiotherapy).
-planned_infertility_service(C) :-
-  claim.planned_service(C, gonadotoxic_therapy).
-planned_infertility_service(C) :-
-  claim.planned_service(C, orchiectomy).
-planned_infertility_service(C) :-
-  claim.planned_service(C, oophorectomy).
-planned_infertility_service(C) :-
-  claim.planned_service(C, hysterectomy).
-planned_infertility_service(C) :-
-  claim.planned_service(C, orchiectomy_for_treatment_of_disease).
-planned_infertility_service(C) :-
-  claim.planned_service(C, oophorectomy_for_treatment_of_disease).
-planned_infertility_service(C) :-
-  claim.planned_service(C, other_treatment_demonstrated_to_result_in_infertility).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Main coverage rule
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- import('../../rules.hrf').
+:- import('../../../../Cardinal Care Core/Precertification Required/rules.hrf').
+:- import('../../Non-basic Infertility Services/rules.hrf').
 
 covered(C) :-
-  % Must be in-network
-  in_network(C),
-
-  % ART is covered once per policy year
-  claim.num_other_covered_art_services(C, NPrev) &
-  eq(NPrev, 0),
-
-  % Must be an ART service for fertility preservation
-  (
-    (
-      % IVF for fertility preservation
-      claim.service_type(C, ivf_for_fertility_preservation),
-      claim.patient_is_believed_to_be_fertile(C, yes),
-      planned_infertility_service(C),
-      (
-        % Either IVF is only effective option
-        claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes)
-        ;
-        % Or at least 3 cycles of ovulation induction have already been tried
-        claim.num_cycles_oral_or_injectable_ovulation_induction(C, M) & geq(M, 3)
-        ;
-        % Or the patient has premature ovarian failure
-        claim.patient_has_premature_ovarian_failure(C, yes)
-      )
+  claim.service_type(C, SType)
+  & (
+      eq(SType, ivf_for_fertility_preservation)
+      | eq(SType, cryopreservation_for_fertility_preservation)
     )
-    ;
-    (
-      % Cryopreservation for fertility preservation
-      claim.service_type(C, cryopreservation_for_fertility_preservation),
-      claim.patient_is_believed_to_be_fertile(C, yes),
-      planned_infertility_service(C)
+  & claim.location_service_received(C, Loc)
+  & distinct(Loc, other)
+  & claim.num_other_covered_art_services(C, Used)
+  & less(Used, 1)
+  & (
+      claim.inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes)
+      | (
+          claim.num_cycles_oral_or_injectable_ovulation_induction(C, NumCycles)
+          & leq(3, NumCycles)
+        )
     )
-  ).
+  & claim.patient_is_believed_to_be_fertile(C, yes)
+  & claim.planned_service(C, Planned)
+  & (
+      eq(Planned, chemotherapy)
+      | eq(Planned, pelvic_radiotherapy)
+      | eq(Planned, gonadotoxic_therapy)
+      | eq(Planned, orchiectomy)
+      | eq(Planned, oophorectomy)
+      | eq(Planned, hysterectomy)
+      | eq(Planned, orchiectomy_for_treatment_of_disease)
+      | eq(Planned, oophorectomy_for_treatment_of_disease)
+      | eq(Planned, other_treatment_demonstrated_to_result_in_infertility)
+    )
+  & (
+      claim.will_be_retrieving_eggs_for_use(C, no)
+      | (
+          claim.will_be_retrieving_eggs_for_use(C, yes)
+          & (
+              claim.patient_has_premature_ovarian_failure(C, yes)
+              | claim.patient_has_premature_ovarian_failure(C, no)
+            )
+        )
+    ).
 
