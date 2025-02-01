@@ -1,0 +1,73 @@
+```prolog
+:- import('../../rules.hrf').
+:- import('../../../../Cardinal Care Core/Precertification Required/rules.hrf').
+:- import('../../Non-basic Infertility Services/rules.hrf').
+
+covered(C) :-
+    claim_service_type(C, Type),
+    (
+        Type = ivf_for_fertility_preservation ->
+        ivf_for_fertility_preservation_eligibility(C);
+        Type = cryopreservation_for_fertility_preservation ->
+        cryopreservation_for_fertility_preservation_eligibility(C)
+    ),
+    precertified_if_necessary(C),
+    claim_location_service_received(C, Location),
+    Location \= other.
+
+ivf_for_fertility_preservation_eligibility(C) :-
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    claim_planned_service(C, PlannedService),
+    PlannedService \= other,
+    claim_will_be_retrieving_eggs_for_use(C, yes),
+    (
+        PlannedService = chemotherapy;
+        PlannedService = pelvic_radiotherapy;
+        PlannedService = gonadotoxic_therapy;
+        PlannedService = orchiectomy;
+        PlannedService = oophorectomy;
+        PlannedService = hysterectomy;
+        PlannedService = orchiectomy_for_treatment_of_disease;
+        PlannedService = oophorectomy_for_treatment_of_disease;
+        PlannedService = other_treatment_demonstrated_to_result_in_infertility
+    ).
+
+cryopreservation_for_fertility_preservation_eligibility(C) :-
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    claim_planned_service(C, PlannedService),
+    PlannedService \= other,
+    claim_will_be_retrieving_eggs_for_use(C, yes),
+    (
+        claim_patient_has_premature_ovarian_failure(C, yes),
+        claim_num_other_covered_art_services(C, Num),
+        Num < 1;
+        meets_cpb_egg_sperm_contact_trial_reqs(C);
+        claim_inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes)
+    ).
+
+ovarian_reserve_eligibility(C) :-
+    claim_date_service_received(C, Date),
+    patient_age_at_time_of_service(C, Age),
+    (
+        Age < 40 ->
+        most_recent_day_3_fsh_test(C, fsh_test(Level, Date, _)),
+        Level < 19;
+        Age >= 40 ->
+        day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+        \+ exists_test_with_level_at_least_19(Tests)
+    ).
+
+patient_age_at_time_of_service(C, Age) :-
+    claim.patient_dob(C, DOB),
+    claim_date_service_received(C, DateReceived),
+    get_timestamp_from_date(DOB, BirthTS),
+    get_timestamp_from_date(DateReceived, ReceivedTS),
+    datetime_difference_in_years(BirthTS, ReceivedTS, Age).
+
+datetime_difference_in_years(BirthTS, ReceivedTS, Age) :-
+    evaluate(datediff(BirthTS, ReceivedTS, years), Age).
+
+requires_precertification(ivf_for_fertility_preservation).
+requires_precertification(cryopreservation_for_fertility_preservation).
+```
+

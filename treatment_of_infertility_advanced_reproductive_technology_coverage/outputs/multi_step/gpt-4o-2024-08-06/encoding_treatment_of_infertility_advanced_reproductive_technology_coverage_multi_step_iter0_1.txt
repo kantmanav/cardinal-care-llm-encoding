@@ -1,0 +1,63 @@
+```prolog
+covered(C) :- 
+    claim_service_type(C, ivf_for_fertility_preservation) &
+    claim_location_service_received(C, Location) &
+    in_network(Location) &
+    claim_patient_is_believed_to_be_fertile(C, yes) &
+    claim_planned_service(C, Service) &
+    fertility_preservation_service(Service) &
+    claim_will_be_retrieving_eggs_for_use(C, yes) &
+    meets_ovarian_responsiveness_criteria(C) &
+    meets_cpb_egg_sperm_contact_trial_reqs(C) &
+    claim_date_service_received(C, Date) &
+    within_cycle_limit(C, Date).
+
+covered(C) :- 
+    claim_service_type(C, cryopreservation_for_fertility_preservation) &
+    claim_location_service_received(C, Location) &
+    in_network(Location) &
+    claim_patient_is_believed_to_be_fertile(C, yes) &
+    claim_planned_service(C, Service) &
+    fertility_preservation_service(Service) &
+    claim_will_be_retrieving_eggs_for_use(C, yes) &
+    meets_ovarian_responsiveness_criteria(C).
+
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+fertility_preservation_service(chemotherapy).
+fertility_preservation_service(pelvic_radiotherapy).
+fertility_preservation_service(gonadotoxic_therapy).
+fertility_preservation_service(orchiectomy).
+fertility_preservation_service(oophorectomy).
+fertility_preservation_service(hysterectomy).
+fertility_preservation_service(other_treatment_demonstrated_to_result_in_infertility).
+
+meets_ovarian_responsiveness_criteria(C) :- 
+    claim_patient_has_premature_ovarian_failure(C, yes).
+
+meets_ovarian_responsiveness_criteria(C) :- 
+    claim_patient_has_premature_ovarian_failure(C, no) &
+    most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)) &
+    less_19_fsh(Level).
+
+less_19_fsh(Level) :-
+    \+ leq(19, Level).
+
+within_cycle_limit(C, Date) :- 
+    claim_num_other_covered_art_services(C, NumCycles) &
+    leq(NumCycles, 1) &
+    claim_date_service_received(C, Date) &
+    fiscal_year(Date, FY) &
+    claim_date_service_received(C, Date2) &
+    fiscal_year(Date2, FY2) &
+    leq(1, FY2 - FY).
+
+fiscal_year(Date, FY) :-
+    evaluate(parsedate(Date), [Y, M, D]) &
+    (M < 7 -> FY = Y; FY = Y + 1).
+
+```
+
