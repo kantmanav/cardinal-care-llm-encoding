@@ -1,0 +1,7 @@
+Your task is to refine and improve the following encoding. 
+You may add, remove, or reorganize elements to make it more correct, concise, and consistent.
+Provide your revised encoding below.
+
+====== START OF PREVIOUS ENCODING ======
+{PREVIOUS_ENCODING}
+====== END OF PREVIOUS ENCODING ======
