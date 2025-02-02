@@ -18,12 +18,3 @@ Valid inputs: yes, no
 
 Fact: claim_date_service_received(C, ***)
 Valid inputs: date (atom of the form 'YYYY_MM_DD')
-
-Fact: claim_inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, ***)
-Valid inputs: yes, no
-
-Fact: claim_num_cycles_oral_or_injectable_ovulation_induction(C, ***)
-Valid inputs: number
-
-Fact: claim_num_other_covered_art_services(Claim, ***)
-Valid inputs: number
