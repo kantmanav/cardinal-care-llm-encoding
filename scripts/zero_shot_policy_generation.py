@@ -24,23 +24,23 @@ def get_relevant_files(benefit_name, base_path):
     Dynamically locate the relevant files based on the benefit folder and methodology.
     """
     benefit_path = os.path.join(base_path, benefit_name)
-    prompt_file = os.path.join(benefit_path, "inputs", "prompts", "one_shot_prompt_with_external_files.txt")
+    prompt_file = os.path.join(benefit_path, "inputs", "prompts/zero_shot", "zero_shot_prompt.txt")
     policy_file = os.path.join(benefit_path, "data", f"{benefit_name}_doc.txt")
-    atoms_file = os.path.join(benefit_path, "inputs", "atoms", "atoms.txt")
-    external_files_path = os.path.join(benefit_path, "inputs", "external_files.txt")
-    output_dir = os.path.join(benefit_path, "outputs", "one_shot_with_externals_files")
+    claim_facts_file = os.path.join(benefit_path, "inputs", "claim_facts", "claim_facts.txt")
+    external_files_path = os.path.join(benefit_path, "inputs", "supporting_predicates.txt")
+    output_dir = os.path.join(benefit_path, "outputs", "zero_shot")
     
     # Check if files exist
-    for file in [prompt_file, policy_file, atoms_file, external_files_path]:
+    for file in [prompt_file, policy_file, claim_facts_file, external_files_path]:
         if not os.path.exists(file):
             raise FileNotFoundError(f"File not found: {file}")
     
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
-    return prompt_file, policy_file, atoms_file, external_files_path, output_dir
+    return prompt_file, policy_file, claim_facts_file, external_files_path, output_dir
 
-def encode(encode_prompt, policy, atoms, external_files, out_dir, model, benefit, methodology, exp_num):
+def encode(encode_prompt, policy, claim_facts, external_files, out_dir, model, benefit, methodology, exp_num):
     """
     Generate the encoding and save the output file.
     """
@@ -57,7 +57,7 @@ def encode(encode_prompt, policy, atoms, external_files, out_dir, model, benefit
         [
             {'input': encode_prompt, 'is_file': True, 'heading': ""},
             {'input': policy, 'is_file': True, 'heading': f"- Insurance policy:"},
-            {'input': atoms, 'is_file': True, 'heading': f"- Atoms of Epilog code:"},
+            {'input': claim_facts, 'is_file': True, 'heading': f"- Claim Facts of Epilog code:"},
             {'input': external_files_content, 'is_file': False, 'heading': f"- External Files:"}
         ],
         False,
@@ -74,13 +74,13 @@ def main():
     base_path = os.getenv("LLM_PROJECT_DIR", "/path/to/project")
     
     # Dynamically locate files
-    prompt_file, policy_file, atoms_file, external_files_path, output_dir = get_relevant_files(benefit_name, base_path)
+    prompt_file, policy_file, claim_facts_file, external_files_path, output_dir = get_relevant_files(benefit_name, base_path)
     
     # Determine the next experiment number
     exp_num = get_next_experiment_number(output_dir, model_name)
     
-    # Methodology is hard-coded as 'one_shot_with_external_files'
-    encode(prompt_file, policy_file, atoms_file, external_files_path, output_dir, model_name, benefit_name, "one_shot_with_external_files", exp_num)
+    # Methodology is hard-coded as 'zero_shot_prompt'
+    encode(prompt_file, policy_file, claim_facts_file, external_files_path, output_dir, model_name, benefit_name, "zero_shot_prompt", exp_num)
 
 if __name__ == "__main__":
     main()
