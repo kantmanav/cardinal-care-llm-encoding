@@ -1,0 +1,63 @@
+covered(C) :-
+  coverage_for_fertility_preservation(C).
+
+coverage_for_fertility_preservation(C) :-
+  claim_service_type(C, SType),
+  (
+    SType = ivf_for_fertility_preservation
+    ;
+    SType = cryopreservation_for_fertility_preservation
+  ),
+  claim_location_service_received(C, Loc),
+  in_network_location(Loc),
+  claim_num_other_covered_art_services(C, UsedCourses),
+  UsedCourses < 1,
+  claim_patient_is_believed_to_be_fertile(C, yes),
+  claim_planned_service(C, PlannedService),
+  planned_service_causes_infertility(PlannedService),
+  ovarian_reserve_ok(C).
+
+in_network_location(stanford_health_care).
+in_network_location(menlo_medical_clinic).
+in_network_location(sutter_health_palo_alto_medical_foundation).
+in_network_location(tier_two_in_network).
+
+planned_service_causes_infertility(chemotherapy).
+planned_service_causes_infertility(pelvic_radiotherapy).
+planned_service_causes_infertility(gonadotoxic_therapy).
+planned_service_causes_infertility(orchiectomy).
+planned_service_causes_infertility(oophorectomy).
+planned_service_causes_infertility(hysterectomy).
+planned_service_causes_infertility(orchiectomy_for_treatment_of_disease).
+planned_service_causes_infertility(oophorectomy_for_treatment_of_disease).
+planned_service_causes_infertility(other_treatment_demonstrated_to_result_in_infertility).
+
+ovarian_reserve_ok(C) :-
+  claim_will_be_retrieving_eggs_for_use(C, no).
+
+ovarian_reserve_ok(C) :-
+  claim_will_be_retrieving_eggs_for_use(C, yes),
+  patient_age_at_time_of_service(C, Age),
+  (
+    (
+      Age < 40,
+      most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+      Level < 19
+    )
+    ;
+    (
+      Age >= 40,
+      claim_patient_has_premature_ovarian_failure(C, yes),
+      Age < 45,
+      most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+      Level < 19
+    )
+    ;
+    (
+      Age >= 40,
+      claim_patient_has_premature_ovarian_failure(C, no),
+      day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+      \+ exists_test_with_level_at_least_19(Tests)
+    )
+  ).
+
