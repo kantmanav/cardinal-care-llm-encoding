@@ -1,0 +1,41 @@
+```prolog
+covered(C) :-
+    % Check location is covered (not out-of-network)
+    claim_location_service_received(C, Location),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
+
+    % Check service type for ART
+    claim_service_type(C, ServiceType),
+    member(ServiceType, [ivf_for_fertility_preservation, cryopreservation_for_fertility_preservation]),
+
+    % Check cycle limits
+    claim_num_other_covered_art_services(C, NumOtherCycles),
+    NumOtherCycles < 1,  % Maximum number of cycles per policy year is 1 course of treatment
+
+    % Eligibility based on type of service
+    ((ServiceType = ivf_for_fertility_preservation) ->
+        ((claim_patient_is_believed_to_be_fertile(C, yes),
+          claim_planned_service(C, PlannedService),
+          member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, orchiectomy_for_treatment_of_disease, oophorectomy_for_treatment_of_disease, other_treatment_demonstrated_to_result_in_infertility]),
+          claim_will_be_retrieving_eggs_for_use(C, yes),
+          most_recent_day_3_fsh_test(C, fsh_test(FSH_Level, _, _)),
+          patient_age_at_time_of_service(C, Age),
+          ((Age < 40, FSH_Level < 19);
+           (Age >= 40, \+ exists_test_with_level_at_least_19([fsh_test(FSH_Level, _, _)|_]))))
+
+        ) ; % Else
+        (ServiceType = cryopreservation_for_fertility_preservation ->
+            (claim_patient_is_believed_to_be_fertile(C, yes),
+             claim_planned_service(C, PlannedService),
+             member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, orchiectomy_for_treatment_of_disease, oophorectomy_for_treatment_of_disease, other_treatment_demonstrated_to_result_in_infertility])))
+        ),
+
+    % Criteria involving inseminations and IVF
+    (claim_inseminations_not_expected_to_be_effective_and_ivf_expected_to_be_only_effective_treatment(C, yes);
+     (patient_age_at_time_of_service(C, Age),
+      claim_num_cycles_oral_or_injectable_ovulation_induction(C, Cycles),
+      (Age =< 37, Cycles >= 3);
+      (Age >= 38))).
+
+```
+

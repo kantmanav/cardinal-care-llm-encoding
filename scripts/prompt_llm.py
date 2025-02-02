@@ -18,17 +18,11 @@ def get_response(model, prompt, stream=False):
         model_config["stream"] = True
 
     # Add specific settings for different models
-    if model in ["o1-2024-12-17", "o1-mini-2024-09-12", "o1-preview-2024-09-12"]:
+    if model in ["o1-2024-12-17", "o1-mini-2024-09-12", "o1-preview-2024-09-12", "gpt-4o-2024-08-06"]:
         response = client.chat.completions.create(**model_config)
-    elif model == "gpt-4o-2024-08-06":
-        response = client.chat.completions.create(
-            **model_config,
-            top_p=1,
-            temperature=1,
-            n=1,
-            presence_penalty=0,
-            frequency_penalty=0
-        )
+    elif model == "o3-mini-2025-01-31":
+        response = client.chat.completions.create(**model_config)
+        reasoning_effort = "high"
     else:
         raise ValueError(f"Unsupported model: {model}")
 
