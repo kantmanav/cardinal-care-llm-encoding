@@ -1,4 +1,4 @@
-Below is a list Prolog relations. These predicates are imported, so you MUST reference them directly in your encoding without redefining their logic.
+Below is a list Prolog relations. These relations are imported, so you MUST reference them directly in your encoding without redefining their logic.
 
 1.	patient_age_at_time_of_service(C, Age)
 	Arguments:
