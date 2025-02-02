@@ -1,0 +1,27 @@
+Below is a summary of the available Prolog relations. These predicates are imported, so you MUST reference them directly in your encoding without redefining their logic.
+
+1.	patient_age_at_time_of_service(C, Age)
+	Arguments:
+	• Age (integer): Unifies with the patient’s age at the time of service.
+	Description: Unifies Age with the patient’s age computed from the service date and date of birth.
+2.	most_recent_day_3_fsh_test(C, fsh_test(Level, Date, Time))
+	Arguments:
+	• fsh_test(Level, Date, Time) (compound): Unifies with the day‑3 FSH test record that has the latest date and time, where:
+        • Level (integer): The hormone level measured in the test.
+        • Date (atom): A date represented in the format ‘YYYY_MM_DD’.
+        • Time (atom): A time represented in the format ‘HH_MM’.
+    Description: Unifies the second argument with the uniquely most recent day‑3 FSH test from the claim by comparing the test dates and times.
+3.	day_3_fsh_tests_since_age_40_in_claim(C, Tests)
+	Arguments:
+	• Tests (list): Unifies with a list of FSH test records whose dates are on or after the patient’s 40th birthday.
+	Description: Filters the claim’s FSH tests, unifying Tests with those performed on or after the patient reaches age 40.
+4.	exists_test_with_level_at_least_19(Tests)
+	Arguments:
+	• Tests (list): A list of day‑3 FSH test records.
+	Description: Succeeds if at least one test in Tests has a hormone level of 19 or greater.
+5.	leq_n_months_diff(EarlierDate, LaterDate, N)
+	Arguments:
+	• EarlierDate (atom): A date in the expected format representing the earlier date.
+	• LaterDate (atom): A date representing the later date.
+	• N (integer): The maximum allowed difference in months.
+	Description: Succeeds if the difference between LaterDate and EarlierDate is less than or equal to N months.
