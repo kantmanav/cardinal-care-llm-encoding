@@ -14,7 +14,7 @@ Description: Unifies the second argument with the uniquely most recent day‑3 F
 Predicate: day_3_fsh_tests_since_age_40_in_claim(C, Tests)
 Arguments:
 	• Tests (list): Unifies with a list of FSH test records whose dates are on or after the patient’s 40th birthday.
-Description: Filters the claim’s FSH tests, unifying Tests with those performed on or after the patient reaches age 40.
+Description: Filters the claim’s FSH tests, unifying Tests with those performed on or after the patient’s 40th birthday.
 
 Predicate: exists_test_with_level_at_least_19(Tests)
 Arguments:
@@ -23,7 +23,7 @@ Description: Succeeds if at least one test in Tests has a hormone level of 19 or
 
 Predicate: leq_n_months_diff(EarlierDate, LaterDate, N)
 Arguments:
-	• EarlierDate (atom): A date in the expected format representing the earlier date.
-	• LaterDate (atom): A date representing the later date.
+	• EarlierDate (atom): A date in the format ‘YYYY_MM_DD’ representing the earlier date.
+	• LaterDate (atom): A date in the format ‘YYYY_MM_DD’ representing the later date.
 	• N (integer): The maximum allowed difference in months.
 Description: Succeeds if the difference between LaterDate and EarlierDate is less than or equal to N months.
