@@ -1,12 +1,12 @@
-- I have given you a benefit (section) of an insurance policy below.
-	- Each 'service' or coverage provision is described under numbered headings, with the name of the service followed by the conditions for coverage under that service.
-	- Some sections also specify exclusions or additional requirements (for example, ART services not covered out-of-network, or additional criteria for fertility preservation).
-	- The policy references external documents (Aetna Infertility Clinical Policy and Aetna Student Health Plan Design and Benefits Summary) that include eligibility requirements, trial requirements, and coverage limitations based on age, ovarian reserve, and other factors.
-- I have also given you a set of claim facts that will be defined in any Prolog query to the policy below:
-	- Many are of the form 'claim_fact(C, ***')', meaning they will be defined for the claim 'C' by filling in a value for *** (this is essentially a parameter for the claim).
-        - Under each of these claim-specific facts, I have listed the valid inputs (in some cases the type of valid input such as number or date) for the fact (which can be filled in for the ***).
-	- Others are of the form 'fact(***)', meaning they are not specific to the claim and will be defined generally by filling in a value for ***.
-- I have also given you a list of Prolog relations. These relations are imported, so you MUST reference them directly in your encoding without redefining their logic.
-- Please encode a Prolog rule, ‘covered(C)’, using ALL OF AND ONLY the claim facts provided in the "Claim Facts of Epilog code:" section below, which is true exactly when the person making a claim, ‘C’, on the policy is eligible for coverage.
-- The rule must incorporate all relevant criteria from the policy, including but not limited to provisions for Advanced Reproductive Technology (ART) services, fertility preservation, eligibility requirements (e.g., egg-sperm contact and ovarian reserve), medical necessity, age-related coverage limitations, cycle limits, and exclusions for out-of-network care, as outlined in the Aetna Infertility Clinical Policy and Aetna Student Health Plan Design and Benefits Summary.
+- I have provided below all of the text that pertains to a coverage (or section) of a health insurance policy.
+	- The text defines all conditions and exclusions that determine whether a patient's claim is covered under this coverage of the policy.
+- Please encode a Prolog rule, ‘covered(C)’, which is true exactly when the patient's claim, ‘C’, is covered.
+	- I have also provided below a set of claim facts that will be defined in any Prolog query to the 'covered(C)' rule.
+		- These are of the form 'claim_Fact(C, Value)', meaning they will be defined for the claim 'C' by filling in a value for Value (this is an input argument for the claim).
+		- Under each of these facts, I have listed the valid inputs (or in some cases, the type of valid input, such as number or date) for the fact (which can be filled in Value).
+		- Use ALL OF (AND ONLY) these claim facts to write your Prolog encoding for the policy coverage.
+	- Finally, I have provided below a set of supporting (pre-defined) Prolog predicates.
+		- Under each supporting predicate, I have listed the arguments to the predicate and their forms, as well as a description of what the predicate does.
+		- Use ALL OF these supporting predicates to write your Prolog encoding for the policy coverage.
+- The Prolog rule that you encode, 'covered(C)', must incorporate all relevant criteria from the policy coverage.
 - Return only Prolog code in your reply. NO EXPLANATION is necessary.
