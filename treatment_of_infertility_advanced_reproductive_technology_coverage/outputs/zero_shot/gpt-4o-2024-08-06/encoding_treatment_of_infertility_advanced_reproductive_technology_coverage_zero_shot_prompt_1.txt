@@ -1,0 +1,39 @@
+```prolog
+covered(C) :-
+    % Check if the service type is valid for fertility preservation
+    claim_service_type(C, ServiceType),
+    member(ServiceType, [ivf_for_fertility_preservation, cryopreservation_for_fertility_preservation]),
+
+    % Check if the service was provided in-network
+    claim_location_service_received(C, Location),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
+
+    % Confirm patient is believed to be fertile
+    claim_patient_is_believed_to_be_fertile(C, yes),
+
+    % Check for a planned service resulting in infertility
+    claim_planned_service(C, PlannedService),
+    member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, orchiectomy_for_treatment_of_disease, oophorectomy_for_treatment_of_disease, other_treatment_demonstrated_to_result_in_infertility]),
+
+    % Check if the patient intends to retrieve eggs and meet criteria for successful pregnancy
+    (claim_will_be_retrieving_eggs_for_use(C, no) ;
+        (claim_will_be_retrieving_eggs_for_use(C, yes),
+         patient_meets_fsh_and_ovarian_criteria(C))).
+
+patient_meets_fsh_and_ovarian_criteria(C) :-
+    % Get patient's age and recent FSH test details
+    patient_age_at_time_of_service(C, Age),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, Date, _)),
+
+    % Check criteria for patients below 40 or exactly 40
+    (Age < 39,
+     Level < 19;
+
+     % Criteria for patients 39 or older
+     Age >= 39,
+     leq_n_months_diff(Date, claim_date_service_received(C, _), 6),
+     (claim_patient_has_premature_ovarian_failure(C, yes) -> Level < 19;
+      day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+      \+ exists_test_with_level_at_least_19(Tests))).
+```
+
