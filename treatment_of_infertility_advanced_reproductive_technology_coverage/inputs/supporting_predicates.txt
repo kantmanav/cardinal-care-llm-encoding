@@ -1,5 +1,3 @@
-Note: In Prolog, unification is the process of making two terms identical by finding a substitution for their variables that makes the terms equal. 
-
 Predicate: patient_age_at_time_of_service(C, Age)
 Arguments:
 	• Age (integer): Unifies with the patient’s age at the time of service.
