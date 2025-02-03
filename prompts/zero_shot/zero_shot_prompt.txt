@@ -6,7 +6,7 @@
 		- Under each of these facts, I have listed the valid inputs (or in some cases, the type of valid input, such as number or date) for the fact (which can be filled in Value).
 		- Use ALL OF (AND ONLY) these claim facts to write your Prolog encoding for the policy coverage.
 	- Finally, I have provided below a set of supporting (pre-defined) Prolog predicates.
-		- Under each supporting predicate, I have listed the arguments to the predicate and their forms, as well as a description of what the predicate does.
+		- Under each supporting predicate, I have listed the arguments to the predicate with their category (e.g. atom, number) and a description, as well as a description of what the predicate does.
 		- Use ALL OF these supporting predicates to write your Prolog encoding for the policy coverage.
 - The Prolog rule that you encode, 'covered(C)', must incorporate all relevant criteria from the policy coverage.
 - Return only Prolog code in your reply. NO EXPLANATION is necessary.
