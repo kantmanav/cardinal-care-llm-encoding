@@ -17,4 +17,4 @@ Fact: claim_patient_has_premature_ovarian_failure(C, Value)
 Valid inputs: yes, no
 
 Fact: claim_date_service_received(C, Value)
-Valid inputs: date (atom of the form 'YYYY_MM_DD')
+Valid inputs: atom of the form 'YYYY_MM_DD'
