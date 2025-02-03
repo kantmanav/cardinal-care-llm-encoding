@@ -24,7 +24,7 @@ def get_relevant_files(benefit_name, base_path):
     Dynamically locate the relevant files based on the benefit folder and methodology.
     """
     benefit_path = os.path.join(base_path, benefit_name)
-    prompt_file = os.path.join(benefit_path, "inputs", "prompts/zero_shot", "zero_shot_prompt.txt")
+    prompt_file = os.path.join(benefit_path, "", "prompts/zero_shot", "zero_shot_prompt.txt")
     policy_file = os.path.join(benefit_path, "data", f"{benefit_name}_doc.txt")
     claim_facts_file = os.path.join(benefit_path, "inputs", "claim_facts", "claim_facts.txt")
     external_files_path = os.path.join(benefit_path, "inputs", "supporting_predicates.txt")

@@ -11,10 +11,10 @@ Fertility preservation involves the retrieval of mature eggs and/or sperm or the
 You are eligible for fertility preservation only when you:
 	• Are believed to be fertile
 	• Have planned services that will result in infertility such as:
-	• Chemotherapy
-	• Pelvic radiotherapy
-	• Other gonadotoxic therapies
-	• Ovarian or testicular removal
+		• Chemotherapy
+		• Pelvic radiotherapy
+		• Other gonadotoxic therapies
+		• Ovarian or testicular removal
 
 Along with the eligibility requirements above, you are eligible for fertility preservation benefits if, for example:
 • You, your partner or dependent child are planning treatment that is demonstrated to result in infertility. Planned treatments include:
