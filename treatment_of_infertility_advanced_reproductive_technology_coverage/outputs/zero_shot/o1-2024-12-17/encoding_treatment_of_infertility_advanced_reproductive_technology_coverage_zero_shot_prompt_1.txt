@@ -1,0 +1,69 @@
+covered(C) :-
+    % Must be an ART service for fertility preservation
+    claim_service_type(C, ServiceType),
+    member(ServiceType, [ivf_for_fertility_preservation, cryopreservation_for_fertility_preservation]),
+
+    % Location must be in-network (not 'other')
+    claim_location_service_received(C, Location),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
+
+    % Patient must be believed to be fertile
+    claim_patient_is_believed_to_be_fertile(C, yes),
+
+    % Planned service must be one that results in infertility
+    claim_planned_service(C, PlannedService),
+    member(PlannedService, [
+        chemotherapy,
+        pelvic_radiotherapy,
+        gonadotoxic_therapy,
+        orchiectomy,
+        orchiectomy_for_treatment_of_disease,
+        oophorectomy,
+        oophorectomy_for_treatment_of_disease,
+        hysterectomy,
+        other_treatment_demonstrated_to_result_in_infertility
+    ]),
+
+    % If eggs will be retrieved for use, must meet FSH/ovarian responsiveness criteria
+    (   claim_will_be_retrieving_eggs_for_use(C, no)
+    ->  true
+    ;   claim_will_be_retrieving_eggs_for_use(C, yes),
+        ovarian_reserve_criteria_met(C)
+    ).
+
+ovarian_reserve_criteria_met(C) :-
+    patient_age_at_time_of_service(C, Age),
+    (   Age < 39
+    ->  fsh_check_under_39(C)
+    ;   Age >= 39,
+        Age < 40
+    ->  fsh_check_39(C)
+    ;   Age >= 40
+    ->  fsh_check_40plus(C)
+    ).
+
+fsh_check_under_39(C) :-
+    most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+    Level < 19.
+
+fsh_check_39(C) :-
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 6),
+    Level < 19.
+
+fsh_check_40plus(C) :-
+    claim_patient_has_premature_ovarian_failure(C, POF),
+    (   POF = yes
+    ->  most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+        claim_date_service_received(C, ServiceDate),
+        leq_n_months_diff(TestDate, ServiceDate, 6),
+        Level < 19
+    ;   POF = no
+    ->  most_recent_day_3_fsh_test(C, fsh_test(_, TestDate, _)),
+        claim_date_service_received(C, ServiceDate),
+        leq_n_months_diff(TestDate, ServiceDate, 6),
+        day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+        \+ exists_test_with_level_at_least_19(Tests)
+    ).
+
