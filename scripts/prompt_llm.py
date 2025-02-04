@@ -7,7 +7,6 @@ def get_response(model, prompt, stream=False):
     Supports different model configurations and an optional streaming mode.
     """
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
     model_config = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
@@ -19,8 +18,9 @@ def get_response(model, prompt, stream=False):
 
     # Add specific settings for different models
     if model in ["o1-2024-12-17", "o1-mini-2024-09-12", "o1-preview-2024-09-12", "gpt-4o-2024-08-06", "o3-mini-2025-01-31"]:
+        if model in ["o1-2024-12-17", "o3-mini-2025-01-31"]:
+            model_config["reasoning_effort"] = "high"
         response = client.chat.completions.create(**model_config)
-        reasoning_effort = "high"
     else:
         raise ValueError(f"Unsupported model: {model}")
 
@@ -52,7 +52,7 @@ def prompt(model, comps, stream=False, out_heading=None, output_file_path=None, 
         if is_file:
             with open(input_text, "r") as file:
                 input_text = file.read()
-        prompt_text += input_text + "\n\n"
+        prompt_text += input_text + "\n\n\n"
 
     response = get_response(model, prompt_text, stream=stream)
 

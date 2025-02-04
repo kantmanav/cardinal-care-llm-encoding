@@ -3,7 +3,7 @@
 - Please encode a Prolog rule, ‘covered(C)’, which is true exactly when the patient's claim, ‘C’, is covered.
 	- I have also provided below a set of claim facts that will be defined in any Prolog query to the 'covered(C)' rule.
 		- These are of the form 'claim_Fact(C, Value)', meaning they will be defined for the claim 'C' by filling in a value for Value (this is an input argument for the claim).
-		- Under each of these facts, I have listed the valid inputs (or in some cases, the type of valid input, such as number or date) for the fact (which can be filled in Value).
+		- Under each of these facts, I have listed the valid inputs which can be filled in for Value (or in some cases, the type of valid input, such as number or date) in the fact.
 		- Use ALL OF (AND ONLY) these claim facts to write your Prolog encoding for the policy coverage.
 	- Finally, I have provided below a set of supporting (pre-defined) Prolog predicates.
 		- Under each supporting predicate, I have listed the arguments to the predicate with their category (e.g. atom, number) and a description, as well as a description of what the predicate does.

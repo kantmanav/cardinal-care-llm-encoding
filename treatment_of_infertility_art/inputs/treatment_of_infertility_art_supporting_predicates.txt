@@ -6,9 +6,9 @@ Description: Unifies Age with the patient’s age computed from the service date
 Predicate: most_recent_day_3_fsh_test(C, fsh_test(Level, Date, Time))
 Arguments:
 	• fsh_test(Level, Date, Time) (compound): Unifies with the day‑3 FSH test record that has the latest date and time, where:
-        • Level (integer): The hormone level measured in the test.
-        • Date (atom): A date represented in the format ‘YYYY_MM_DD’.
-        • Time (atom): A time represented in the format ‘HH_MM’.
+		• Level (integer): The hormone level measured in the test.
+		• Date (atom): A date represented in the format ‘YYYY_MM_DD’.
+		• Time (atom): A time represented in the format ‘HH_MM’.
 Description: Unifies the second argument with the uniquely most recent day‑3 FSH test from the claim by comparing the test dates and times.
 
 Predicate: day_3_fsh_tests_since_age_40_in_claim(C, Tests)
