@@ -1,0 +1,6 @@
+Determine whether the following insurance claim is covered by the contract provided below. Output "true" if it's covered or "false" if it's not. NO EXPLANATION NECESSARY. 
+
+Claim: 
+The patient was born on June 1, 1990. The service was received on August 10, 2024. The service type is cryopreservation for fertility preservation. The service was received at Stanford Health Care. The patient is female. It is believed that the patient is fertile. The patient has premature ovarian failure. A Day 3 FSH test on July 1, 2024 at 12:00 (all times are military) showed a level of 18. The planned service is chemotherapy. The patient will be retrieving her own eggs for use.
+
+Contract:
