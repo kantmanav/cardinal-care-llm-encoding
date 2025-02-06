@@ -1,50 +1,92 @@
 import os
+import requests
 from openai import OpenAI
 
-def get_response(model, prompt, stream=False):
-    """
-    Calls OpenAI's API with the given model and prompt.
-    Supports different model configurations and an optional streaming mode.
-    """
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    model_config = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-    }
+# API Configuration
+DEEPINFRA_API_URL = "https://api.deepinfra.com/v1/openai"
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
-    # Add streaming option if enabled
-    if stream:
-        model_config["stream"] = True
+# Model Mapping
+MODEL_MAP = {
+    "o1-2024-12-17": {"provider": "openai", "model": "o1-2024-12-17"},
+    "o1-mini-2024-09-12": {"provider": "openai", "model": "o1-mini-2024-09-12"},
+    "o1-preview-2024-09-12": {"provider": "openai", "model": "o1-preview-2024-09-12"},
+    "gpt-4o-2024-08-06": {"provider": "openai", "model": "gpt-4o-2024-08-06"},
+    "o3-mini-2025-01-31": {"provider": "openai", "model": "o3-mini-2025-01-31"},
+    "Llama-3.1-405B-Instruct": {"provider": "deepinfra", "model": "meta-llama/Meta-Llama-3.1-405B-Instruct"},
+    "DeepSeek-R1": {"provider": "deepseek", "model": "deepseek-reasoner"},
+}
 
-    # Add specific settings for different models
-    if model in ["o1-2024-12-17", "o1-mini-2024-09-12", "o1-preview-2024-09-12", "gpt-4o-2024-08-06", "o3-mini-2025-01-31"]:
-        if model in ["o1-2024-12-17", "o3-mini-2025-01-31"]:
-            model_config["reasoning_effort"] = "high"
-        response = client.chat.completions.create(**model_config)
+# ===== OpenAI API Integration =====
+def run_openai(prompt, model):
+    """Calls OpenAI's GPT models."""
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise ValueError("OPENAI_API_KEY is not set.")
+
+    client = OpenAI(api_key=openai_api_key)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=1.0,
+        top_p=1.0
+    )
+    return response.choices[0].message.content
+
+# ===== Deep Infra API for Llama-3.1-405B-Instruct =====
+def run_llama(prompt, model):
+    """Calls Llama-3.1-405B-Instruct via Deep Infra API."""
+    deepinfra_api_key = os.getenv("DEEPINFRA_API_KEY")
+    if not deepinfra_api_key:
+        raise ValueError("DEEPINFRA_API_KEY is not set.")
+
+    client = OpenAI(api_key=deepinfra_api_key, base_url=DEEPINFRA_API_URL)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=1.0,
+        top_p=1.0
+    )
+    return response.choices[0].message.content
+
+# ===== DeepSeek-R1 API Integration =====
+def run_deepseek(prompt, model):
+    """Calls DeepSeek-R1 via DeepSeek API."""
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not deepseek_api_key:
+        raise ValueError("DEEPSEEK_API_KEY is not set.")
+
+    client = OpenAI(api_key=deepseek_api_key, base_url="https://api.deepseek.com")
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=1.0,
+        top_p=1.0
+    )
+    return response.choices[0].message.content
+
+# ===== Model Routing Function =====
+def get_response(model_name, prompt):
+    """Routes requests to the correct model API."""
+    if model_name in MODEL_MAP:
+        provider = MODEL_MAP[model_name]["provider"]
+        model = MODEL_MAP[model_name]["model"]
+
+        if provider == "openai":
+            return run_openai(prompt, model)
+        elif provider == "deepinfra":
+            return run_llama(prompt, model)
+        elif provider == "deepseek":
+            return run_deepseek(prompt, model)
     else:
-        raise ValueError(f"Unsupported model: {model}")
+        raise ValueError(f"Unsupported model: {model_name}")
 
-    return response
-
-def prompt(model, comps, stream=False, out_heading=None, output_file_path=None, append=False):
-    """
-    Constructs a full prompt from multiple inputs, calls the LLM,
-    and optionally saves the response to a file.
-    
-    Parameters:
-        model (str): The model to use.
-        comps (list): A list of dictionaries with {'input', 'is_file', 'heading'}.
-        stream (bool): Whether to enable streaming.
-        out_heading (str): An optional heading to include in the output.
-        output_file_path (str): If provided, saves output to a file.
-        append (bool): Whether to append (True) or overwrite (False) the file.
-    """
+# ===== Prompt Function =====
+def prompt(model_name, comps, stream=False, out_heading=None, output_file_path=None, append=False):
+    """Creates the prompt and retrieves the response."""
     prompt_text = ""
-    
     for comp in comps:
-        input_text = comp['input']
-        is_file = comp['is_file']
-        heading = comp['heading']
+        input_text, is_file, heading = comp['input'], comp['is_file'], comp['heading']
 
         if heading:
             prompt_text += heading + "\n"
@@ -54,12 +96,12 @@ def prompt(model, comps, stream=False, out_heading=None, output_file_path=None, 
                 input_text = file.read()
         prompt_text += input_text + "\n\n\n"
 
-    response = get_response(model, prompt_text, stream=stream)
+    response = get_response(model_name, prompt_text)
 
     output = ""
     if out_heading:
         output = out_heading + "\n"
-    output += response.choices[0].message.content
+    output += response
 
     # Save the output
     mode = 'a' if append else 'w'
