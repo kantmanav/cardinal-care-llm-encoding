@@ -9,8 +9,6 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 # Model Mapping
 MODEL_MAP = {
     "o1-2024-12-17": {"provider": "openai", "model": "o1-2024-12-17"},
-    "o1-mini-2024-09-12": {"provider": "openai", "model": "o1-mini-2024-09-12"},
-    "o1-preview-2024-09-12": {"provider": "openai", "model": "o1-preview-2024-09-12"},
     "gpt-4o-2024-08-06": {"provider": "openai", "model": "gpt-4o-2024-08-06"},
     "o3-mini-2025-01-31": {"provider": "openai", "model": "o3-mini-2025-01-31"},
     "Llama-3.1-405B-Instruct": {"provider": "deepinfra", "model": "meta-llama/Meta-Llama-3.1-405B-Instruct"},
@@ -25,12 +23,17 @@ def run_openai(prompt, model):
         raise ValueError("OPENAI_API_KEY is not set.")
 
     client = OpenAI(api_key=openai_api_key)
-    response = client.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=1.0,
-        top_p=1.0
-    )
+    if model in ["o1-2024-12-17", "o3-mini-2025-01-3"]:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            reasoning_effort = "high"
+        )
+    else:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+        )
     return response.choices[0].message.content
 
 # ===== Deep Infra API for Llama-3.1-405B-Instruct =====
@@ -44,8 +47,6 @@ def run_llama(prompt, model):
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
-        temperature=1.0,
-        top_p=1.0
     )
     return response.choices[0].message.content
 
@@ -59,9 +60,8 @@ def run_deepseek(prompt, model):
     client = OpenAI(api_key=deepseek_api_key, base_url="https://api.deepseek.com")
     response = client.chat.completions.create(
         model=model,
-        messages=[{"role": "user", "content": prompt}],
-        temperature=1.0,
-        top_p=1.0
+        messages=[
+            {"role": "user", "content": prompt}],
     )
     return response.choices[0].message.content
 
