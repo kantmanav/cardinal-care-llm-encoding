@@ -1,0 +1,61 @@
+covered(C) :-
+    % Must be an ART service for fertility preservation
+    claim_service_type(C, ServiceType),
+    (   ServiceType = ivf_for_fertility_preservation
+    ;   ServiceType = cryopreservation_for_fertility_preservation
+    ),
+    % Must be in-network
+    claim_location_service_received(C, Loc),
+    in_network(Loc),
+    % Must be believed to be fertile
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    % Must have a planned service that results in infertility
+    claim_planned_service(C, Planned),
+    valid_planned_service(Planned),
+    % If eggs are being retrieved, FSH criteria must be met
+    (   claim_will_be_retrieving_eggs_for_use(C, yes)
+    ->  meets_fsh_criteria(C)
+    ;   claim_will_be_retrieving_eggs_for_use(C, no)
+    ).
+
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+valid_planned_service(chemotherapy).
+valid_planned_service(pelvic_radiotherapy).
+valid_planned_service(gonadotoxic_therapy).
+valid_planned_service(orchiectomy).
+valid_planned_service(oophorectomy).
+valid_planned_service(hysterectomy).
+valid_planned_service(orchiectomy_for_treatment_of_disease).
+valid_planned_service(oophorectomy_for_treatment_of_disease).
+valid_planned_service(other_treatment_demonstrated_to_result_in_infertility).
+
+meets_fsh_criteria(C) :-
+    patient_age_at_time_of_service(C, Age),
+    (   Age < 39
+    ->  % Under 39
+        most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+        Level < 19
+    ;   % 39 or older => FSH test must be within 6 months of service
+        claim_date_service_received(C, SvcDate),
+        most_recent_day_3_fsh_test(C, fsh_test(_, TestDate, _)),
+        leq_n_months_diff(TestDate, SvcDate, 6),
+        (   Age < 40
+        ->  % Exactly 39
+            most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+            Level < 19
+        ;   % 40 or older
+            (   claim_patient_has_premature_ovarian_failure(C, yes)
+            ->  % 40+ with POF => most recent FSH < 19
+                most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+                Level < 19
+            ;   % 40+ without POF => all tests since 40 must be < 19
+                day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+                \+ exists_test_with_level_at_least_19(Tests)
+            )
+        )
+    ).
+
