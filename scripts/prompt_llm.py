@@ -95,6 +95,7 @@ def prompt(model_name, comps, stream=False, out_heading=None, output_file_path=N
             with open(input_text, "r") as file:
                 input_text = file.read()
         prompt_text += input_text + "\n\n\n"
+    # print(prompt_text)
 
     response = get_response(model_name, prompt_text)
 
