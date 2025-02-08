@@ -9,7 +9,7 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 # Model Mapping
 MODEL_MAP = {
     "o1-2024-12-17": {"provider": "openai", "model": "o1-2024-12-17"},
-    "gpt-4o-2024-11-20": {"provider": "openai", "model": "gpt-4o-2024-08-06"},
+    "gpt-4o-2024-11-20": {"provider": "openai", "model": "gpt-4o-2024-11-20"},
     "o3-mini-2025-01-31": {"provider": "openai", "model": "o3-mini-2025-01-31"},
     "Llama-3.1-405B-Instruct": {"provider": "deepinfra", "model": "meta-llama/Meta-Llama-3.1-405B-Instruct"},
     "DeepSeek-R1": {"provider": "deepseek", "model": "deepseek-reasoner"},
