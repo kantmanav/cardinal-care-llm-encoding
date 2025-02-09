@@ -33,7 +33,7 @@ The following are not covered under the infertility treatment benefit:
 
 3) Comprehensive infertility services:
 
-3b) Infertility services:
+3a) Infertility services:
 • The results of your unmedicated day 3 FSH test:
 	• If you are less than age 40, must be less than 19 mIU/mL in your most recent lab test
 	• If you are age 40 and older, must be less than 19 mIU/mL in all prior tests performed after age 40
