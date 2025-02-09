@@ -1,3 +1,7 @@
+Predicate: patient_is_infertile(C)
+Arguments:
+Description: Succeeds if the patient meets the infertility criteria.
+
 Predicate: patient_age_at_time_of_service(C, Age)
 Arguments:
 	• Age (integer): Unifies with the patient’s age at the time of service.
