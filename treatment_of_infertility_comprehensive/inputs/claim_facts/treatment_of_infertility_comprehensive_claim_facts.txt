@@ -1,0 +1,29 @@
+Fact: claim.service_type(C, Value)
+Valid inputs: ovulation_induction_cycle_with_menotropins, intrauterine_insemination
+
+Fact: claim.patient_has_had_voluntary_sterilization(C, Value)
+Valid inputs: yes, no
+
+Fact: claim.demonstrated_and_documented_condition_causing_infertility(C, Value)
+Valid inputs: natural_menopause, natural_perimenopause, natural_male_reproductive_aging, other_natural_physiologic_process, other
+
+Fact: claim.successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, Value)
+Valid inputs: yes, no
+
+Fact: claim.sex_of_patient_trying_to_conceive(C, Value)
+Valid inputs: male, female
+
+Fact: claim.sex_of_patients_partner(C, Value)
+Valid inputs: male, female, no_partner
+
+Fact: claim.date_service_received(C, Value)
+Valid inputs: atom of the form 'YYYY_MM_DD'
+
+Fact: claim.num_months_timed_unprotected_intercourse(C, Value)
+Valid inputs: non-negative integer
+
+Fact: claim.num_cycles_donor_insemination(C, Value)
+Valid inputs: non-negative integer
+
+Fact: claim.age_of_patients_female_partner(C, Value)
+Valid inputs: non-negative integer
