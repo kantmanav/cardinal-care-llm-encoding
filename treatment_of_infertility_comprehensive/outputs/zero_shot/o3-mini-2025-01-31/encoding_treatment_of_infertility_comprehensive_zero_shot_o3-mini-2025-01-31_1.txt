@@ -1,0 +1,93 @@
+covered(C) :-
+    % Service type must be one of the covered services
+    claim_service_type(C, Service),
+    ( Service = ovulation_induction_cycle_with_menotropins ; Service = intrauterine_insemination ),
+    % Patient must be infertile
+    patient_is_infertile(C),
+    % Neither patient nor partner have had voluntary sterilization
+    claim_patient_has_had_voluntary_sterilization(C, no),
+    % There must be a documented condition causing infertility that is not due to a natural physiologic process
+    claim_demonstrated_and_documented_condition_causing_infertility(C, Cond),
+    allowed_condition(Cond),
+    % A successful pregnancy cannot be attained through less costly treatment
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+    % Get the service date
+    claim_date_service_received(C, ServiceDate),
+    % Get sexes of patient and partner
+    claim_sex_of_patient_trying_to_conceive(C, PatientSex),
+    claim_sex_of_patients_partner(C, PartnerSex),
+    (
+      % CASE: Patient is female
+      PatientSex = female ->
+         (
+           patient_age_at_time_of_service(C, Age),
+           (
+             % Female under 35 years old
+             Age < 35 ->
+                FSH_MonthLimit = 12,
+                (
+                  % With male partner: timed intercourse OR donor insemination cycles
+                  PartnerSex = male ->
+                     ( ( claim_num_months_timed_unprotected_intercourse(C, NumMonths),
+                         NumMonths >= 12 )
+                       ;
+                       ( claim_num_cycles_donor_insemination(C, NumCycles),
+                         NumCycles >= 12 )
+                     )
+                ;
+                  % Without male partner: donor insemination cycles must be met
+                  ( claim_num_cycles_donor_insemination(C, NumCycles),
+                    NumCycles >= 12 )
+                )
+             ;
+             % Female 35 or older
+             Age >= 35 ->
+                FSH_MonthLimit = 6,
+                (
+                  PartnerSex = male ->
+                    ( ( claim_num_months_timed_unprotected_intercourse(C, NumMonths),
+                        NumMonths >= 6 )
+                      ;
+                      ( claim_num_cycles_donor_insemination(C, NumCycles),
+                        NumCycles >= 6 )
+                    )
+                  ;
+                    ( claim_num_cycles_donor_insemination(C, NumCycles),
+                      NumCycles >= 6 )
+                )
+           ),
+           % Check timing of the most recent day-3 FSH test relative to service date
+           most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+           leq_n_months_diff(TestDate, ServiceDate, FSH_MonthLimit),
+           % Check FSH level criteria
+           ( Age < 40 ->
+                 Level < 19
+           ;
+                 day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+                 \+ exists_test_with_level_at_least_19(Tests)
+           )
+         )
+      ;
+      % CASE: Patient is male
+      PatientSex = male ->
+         (
+           % Must have a female partner
+           PartnerSex = female,
+           claim_age_of_patients_female_partner(C, PartnerAge),
+           claim_num_months_timed_unprotected_intercourse(C, NumMonths),
+           ( PartnerAge < 35 ->
+                 NumMonths >= 12
+           ;
+                 NumMonths >= 6
+           )
+         )
+    ).
+
+allowed_condition(Cond) :-
+    % Only conditions other than natural physiologic processes are allowed.
+    % Exclude: natural_menopause, natural_perimenopause, natural_male_reproductive_aging, other_natural_physiologic_process.
+    Cond \= natural_menopause,
+    Cond \= natural_perimenopause,
+    Cond \= natural_male_reproductive_aging,
+    Cond \= other_natural_physiologic_process.
+

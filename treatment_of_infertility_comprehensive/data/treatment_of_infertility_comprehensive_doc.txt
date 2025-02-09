@@ -1,7 +1,7 @@
-Comprehensive Infertility Services
+1) Comprehensive Infertility Services:
 Eligible health services include comprehensive infertility care.
 
-Infertility Services
+1a) Infertility Services:
 You are eligible for infertility services if:
 	• There exists a condition that:
 		- Is demonstrated to cause the illness of infertility.
@@ -47,7 +47,6 @@ You are eligible for infertility services if:
 			• Number of donor artificial insemination cycles (self-paid/not paid for by plan): Does not apply
 			• You need to have an unmedicated day 3 FSH test done within the past: Does not apply
 			• The results of your unmedicated day 3 FSH test: Does not apply
-
 We will cover charges made by an infertility specialist for the following infertility services:
 	• Ovulation induction cycle(s) with menotropins
 	• Intrauterine insemination
