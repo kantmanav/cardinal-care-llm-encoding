@@ -1,0 +1,29 @@
+Fact: claim_hospitalization_reason(C, Value)
+Valid inputs: sickness, accidental_injury, other
+
+Fact: claim_agreement_signed(C, Value)
+Valid inputs: yes, no
+
+Fact: claim_premium_paid(C, Value)
+Valid inputs: yes, no
+
+Fact: claim_fraud_occurred(C, Value)
+Valid inputs: yes, no
+
+Fact: claim_misrepresentation_occurred(C, Value)
+Valid inputs: yes, no
+
+Fact: claim_material_witholding_occurred(C, Value)
+Valid inputs: yes, no
+
+Fact: claim_wellness_visit_occurred_months_from_effective_date(C, Value)
+Valid inputs: non-negative number
+
+Fact: claim_wellness_visit_confirmation_provided_months_from_effective_date(C, Value)
+Valid inputs: non-negative number
+
+Fact: claim_hospitalization_causal_event(C, Value)
+Valid inputs: skydiving, military_service, firefighting_service, police_service, other
+
+Fact: claim_patient_age(C, Value)
+Valid inputs: non-negative number
