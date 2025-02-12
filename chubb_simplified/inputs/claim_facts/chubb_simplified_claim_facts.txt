@@ -1,6 +1,9 @@
 Fact: claim_hospitalization_reason(C, Value)
 Valid inputs: sickness, accidental_injury, other
 
+Fact: claim_hospitalization_occurred_months_from_effective_date(C, Value)
+Valid inputs: non-negative number
+
 Fact: claim_agreement_signed(C, Value)
 Valid inputs: yes, no
 
@@ -24,6 +27,9 @@ Valid inputs: non-negative number
 
 Fact: claim_hospitalization_causal_event(C, Value)
 Valid inputs: skydiving, military_service, firefighting_service, police_service, other
+
+Fact: claim_country_of_sickness_or_injury(C, Value)
+Valid inputs: usa, non_usa
 
 Fact: claim_patient_age(C, Value)
 Valid inputs: non-negative number
