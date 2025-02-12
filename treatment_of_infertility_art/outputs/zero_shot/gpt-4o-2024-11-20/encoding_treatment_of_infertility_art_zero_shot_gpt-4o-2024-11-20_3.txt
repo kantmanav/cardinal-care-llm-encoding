@@ -1,0 +1,38 @@
+```prolog
+covered(C) :-
+    % Ensure service type is for ART services related to fertility preservation
+    claim_service_type(C, ServiceType),
+    (ServiceType = ivf_for_fertility_preservation ; ServiceType = cryopreservation_for_fertility_preservation),
+
+    % Ensure service location is in-network
+    claim_location_service_received(C, Location),
+    member(Location, [stanford_health_care, menlo_medical_clinic, sutter_health_palo_alto_medical_foundation, tier_two_in_network]),
+
+    % Patient must be believed to be fertile
+    claim_patient_is_believed_to_be_fertile(C, yes),
+
+    % Planned service must result in infertility
+    claim_planned_service(C, PlannedService),
+    member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, orchiectomy_for_treatment_of_disease, oophorectomy_for_treatment_of_disease, other_treatment_demonstrated_to_result_in_infertility]),
+
+    % Patient must meet ovarian reserve criteria, if eggs are being retrieved
+    (claim_will_be_retrieving_eggs_for_use(C, no) ;
+     (claim_will_be_retrieving_eggs_for_use(C, yes),
+      patient_age_at_time_of_service(C, Age),
+      (Age < 40 ->
+          most_recent_day_3_fsh_test(C, fsh_test(FSH_Level, _, _)),
+          FSH_Level < 19
+      ;
+          Age >= 40,
+          day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+          \+ exists_test_with_level_at_least_19(Tests),
+          most_recent_day_3_fsh_test(C, fsh_test(FSH_Level_Recent, _, _)),
+          leq_n_months_diff(_, FSH_Level_Recent, 6)))),
+
+    % Handle case for premature ovarian failure if patient is 40+ years old
+    (claim_patient_has_premature_ovarian_failure(C, no) ;
+     (claim_patient_has_premature_ovarian_failure(C, yes),
+      most_recent_day_3_fsh_test(C, fsh_test(FSH_Level_POF, _, _)),
+      FSH_Level_POF < 19)).
+```
+

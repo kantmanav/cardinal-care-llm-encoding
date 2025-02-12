@@ -1,0 +1,78 @@
+```prolog
+covered(C) :-
+    % Check the service type
+    claim_service_type(C, ServiceType),
+    member(ServiceType, [ovulation_induction_cycle_with_menotropins, intrauterine_insemination]),
+
+    % The patient must meet infertility criteria
+    patient_is_infertile(C),
+
+    % Patient or partner must not have had voluntary sterilization
+    claim_patient_has_had_voluntary_sterilization(C, no),
+
+    % The infertility condition must not be due to natural physiologic processes like aging
+    claim_demonstrated_and_documented_condition_causing_infertility(C, Condition),
+    \+ member(Condition, [natural_menopause, natural_perimenopause, other_natural_physiologic_process]),
+
+    % A successful pregnancy cannot be attained via less costly treatment covered by the plan
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+
+    % Check requirements based on patient and partner's sex and age
+    claim_sex_of_patient_trying_to_conceive(C, PatientSex),
+    claim_sex_of_patients_partner(C, PartnerSex),
+
+    % Handle female patient cases based on age and partner sex
+    ( PatientSex = female, !,
+        patient_age_at_time_of_service(C, PatientAge),
+        (( PartnerSex = male, !,
+            ( ( PatientAge < 35, 
+                claim_num_months_timed_unprotected_intercourse(C, Months),
+                Months >= 12,
+                most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+                leq_n_months_diff(TestDate, ClaimDate, 12),
+                Level < 19
+              );
+              ( PatientAge >= 35,
+                claim_num_months_timed_unprotected_intercourse(C, Months),
+                Months >= 6,
+                most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+                leq_n_months_diff(TestDate, ClaimDate, 6),
+                ( PatientAge < 40, Level < 19;
+                  PatientAge >= 40, \+ exists_test_with_level_at_least_19(Day3Tests), day_3_fsh_tests_since_age_40_in_claim(C, Day3Tests)
+                )
+              )
+            )
+          );
+          ( PartnerSex = no_partner, !,
+            ( ( PatientAge < 35,
+                claim_num_cycles_donor_insemination(C, Cycles),
+                Cycles >= 12,
+                most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+                leq_n_months_diff(TestDate, ClaimDate, 12),
+                Level < 19
+              );
+              ( PatientAge >= 35,
+                claim_num_cycles_donor_insemination(C, Cycles),
+                Cycles >= 6,
+                most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+                leq_n_months_diff(TestDate, ClaimDate, 6),
+                ( PatientAge < 40, Level < 19;
+                  PatientAge >= 40, \+ exists_test_with_level_at_least_19(Day3Tests), day_3_fsh_tests_since_age_40_in_claim(C, Day3Tests)
+                )
+              )
+            )
+          )
+        )
+    );
+    % Handle male patient cases based on partner's age
+    ( PatientSex = male, !,
+        ( ( PartnerSex = female,
+            claim_age_of_patients_female_partner(C, PartnerAge),
+            ( PartnerAge < 35, claim_num_months_timed_unprotected_intercourse(C, Months), Months >= 12;
+              PartnerAge >= 35, claim_num_months_timed_unprotected_intercourse(C, Months), Months >= 6
+            )
+          )
+        )
+    ).
+```
+

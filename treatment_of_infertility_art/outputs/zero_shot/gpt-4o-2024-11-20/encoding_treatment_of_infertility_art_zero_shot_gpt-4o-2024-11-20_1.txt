@@ -1,0 +1,37 @@
+```prolog
+covered(C) :-
+    % Check if the claim is for either covered ART service type
+    claim_service_type(C, ServiceType),
+    ServiceType = ivf_for_fertility_preservation; ServiceType = cryopreservation_for_fertility_preservation,
+    
+    % Verify the service location is in-network
+    claim_location_service_received(C, Location),
+    (Location = stanford_health_care;
+     Location = menlo_medical_clinic;
+     Location = sutter_health_palo_alto_medical_foundation;
+     Location = tier_two_in_network),
+     
+    % For fertility preservation claims, validate eligibility criteria
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    claim_planned_service(C, PlannedService),
+    (PlannedService = chemotherapy;
+     PlannedService = pelvic_radiotherapy;
+     PlannedService = gonadotoxic_therapy;
+     PlannedService = orchiectomy_for_treatment_of_disease;
+     PlannedService = oophorectomy_for_treatment_of_disease;
+     PlannedService = hysterectomy;
+     PlannedService = other_treatment_demonstrated_to_result_in_infertility),
+    claim_will_be_retrieving_eggs_for_use(C, WillRetrieveEggs),
+    (WillRetrieveEggs = no; (WillRetrieveEggs = yes, validate_day_3_fsh(C))).
+
+validate_day_3_fsh(C) :-
+    % Get patient age at time of service
+    patient_age_at_time_of_service(C, Age),
+    (Age < 40 -> % For patients under 40
+        most_recent_day_3_fsh_test(C, fsh_test(FSHLevel, _, _)),
+        FSHLevel < 19
+    ; Age >= 40 -> % For patients 40 and above
+        day_3_fsh_tests_since_age_40_in_claim(C, FSHTests),
+        \+ exists_test_with_level_at_least_19(FSHTests)).
+```
+

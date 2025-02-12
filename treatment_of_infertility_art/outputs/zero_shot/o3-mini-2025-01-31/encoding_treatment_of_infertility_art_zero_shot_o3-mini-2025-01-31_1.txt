@@ -1,0 +1,43 @@
+covered(C) :-
+    claim_service_type(C, Type),
+    eligible_type(Type),
+    claim_location_service_received(C, Loc),
+    in_network(Loc),
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    claim_planned_service(C, Planned),
+    valid_planned(Planned),
+    ( claim_will_be_retrieving_eggs_for_use(C, no)
+    ; claim_will_be_retrieving_eggs_for_use(C, yes),
+      patient_age_at_time_of_service(C, Age),
+      ( Age < 40 ->
+            most_recent_day_3_fsh_test(C, fsh_test(Level,_,_)),
+            Level < 19
+      ; Age >= 40,
+            ( claim_patient_has_premature_ovarian_failure(C, yes) ->
+                  most_recent_day_3_fsh_test(C, fsh_test(Level,_,_)),
+                  Level < 19
+            ; day_3_fsh_tests_since_age_40(C, Tests),
+              \+ exists_test_with_level_at_least_19(Tests)
+            )
+      )
+    ).
+
+eligible_type(ivf_for_fertility_preservation).
+eligible_type(cryopreservation_for_fertility_preservation).
+
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+valid_planned(chemotherapy).
+valid_planned(pelvic_radiotherapy).
+valid_planned(gonadotoxic_therapy).
+valid_planned(orchiectomy).
+valid_planned(oophorectomy).
+valid_planned(hysterectomy).
+valid_planned(orchiectomy_for_treatment_of_disease).
+valid_planned(oophorectomy_for_treatment_of_disease).
+valid_planned(other_treatment_demonstrated_to_result_in_infertility).
+valid_planned(other).
+

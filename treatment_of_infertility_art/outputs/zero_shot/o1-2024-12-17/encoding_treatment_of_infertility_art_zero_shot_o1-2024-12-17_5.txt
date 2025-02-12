@@ -1,0 +1,74 @@
+covered(C) :-
+    % Must be an ART service for fertility preservation
+    claim_service_type(C, ServiceType),
+    (
+        ServiceType = ivf_for_fertility_preservation
+        ; ServiceType = cryopreservation_for_fertility_preservation
+    ),
+
+    % Must not be out-of-network
+    claim_location_service_received(C, Location),
+    Location \= other,
+
+    % Must meet fertility preservation criteria
+    meets_fertility_preservation_criteria(C).
+
+meets_fertility_preservation_criteria(C) :-
+    % Patient must be believed to be fertile
+    claim_patient_is_believed_to_be_fertile(C, yes),
+
+    % Must have a planned service that results in infertility
+    claim_planned_service(C, Planned),
+    service_results_in_infertility(Planned),
+
+    % If eggs are being retrieved, must meet FSH criteria
+    (
+        claim_will_be_retrieving_eggs_for_use(C, no)
+        ;
+        ( claim_will_be_retrieving_eggs_for_use(C, yes),
+          meets_fsh_criteria(C)
+        )
+    ).
+
+service_results_in_infertility(chemotherapy).
+service_results_in_infertility(pelvic_radiotherapy).
+service_results_in_infertility(gonadotoxic_therapy).
+service_results_in_infertility(orchiectomy).
+service_results_in_infertility(oophorectomy).
+service_results_in_infertility(hysterectomy).
+service_results_in_infertility(orchiectomy_for_treatment_of_disease).
+service_results_in_infertility(oophorectomy_for_treatment_of_disease).
+service_results_in_infertility(other_treatment_demonstrated_to_result_in_infertility).
+
+meets_fsh_criteria(C) :-
+    patient_age_at_time_of_service(C, Age),
+    (
+        % Under age 39: most recent test < 19 (no time restriction mentioned)
+        Age < 39 ->
+            most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+            Level < 19
+
+        % Age 39: most recent test < 19 and within 6 months
+        ; (Age >= 39, Age < 40) ->
+            claim_date_service_received(C, ServiceDate),
+            most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+            leq_n_months_diff(TestDate, ServiceDate, 6),
+            Level < 19
+
+        % Age >= 40: most recent test within 6 months, then specific criteria
+        ; Age >= 40 ->
+            claim_date_service_received(C, ServiceDate),
+            most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+            leq_n_months_diff(TestDate, ServiceDate, 6),
+            (
+                % If premature ovarian failure, only most recent test < 19
+                claim_patient_has_premature_ovarian_failure(C, yes) ->
+                    Level < 19
+
+                % Otherwise, all tests since age 40 must be < 19
+                ; claim_patient_has_premature_ovarian_failure(C, no) ->
+                    day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+                    \+ exists_test_with_level_at_least_19(Tests)
+            )
+    ).
+

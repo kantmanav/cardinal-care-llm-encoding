@@ -1,0 +1,11 @@
+```prolog
+covered(C) :-
+    % Policy must be in effect
+    claim_agreement_signed(C, yes),
+    claim_premium_paid(C, yes),
+    claim_fraud_occurred(C, no),
+    claim_misrepresentation_occurred(C, no),
+    claim_material_witholding_occurred(C, no),
+    (
+        claim_wellness_visit_occured_months_from_effective_date(C, _) =< 
+

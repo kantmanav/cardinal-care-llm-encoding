@@ -1,0 +1,95 @@
+covered(C) :-
+    % Service type must be one of the covered services.
+    claim_service_type(C, Service),
+    ( Service = ovulation_induction_cycle_with_menotropins ; Service = intrauterine_insemination ),
+    % Patient meets the infertility criterion.
+    patient_is_infertile(C),
+    % No voluntary sterilization.
+    claim_patient_has_had_voluntary_sterilization(C, no),
+    % Less costly treatment has failed.
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+    % There is a documented condition causing infertility that is not excluded.
+    claim_demonstrated_and_documented_condition_causing_infertility(C, Cond),
+    \+ excluded_condition(Cond),
+    % Branch by patient sex trying to conceive.
+    claim_sex_of_patient_trying_to_conceive(C, PatientSex),
+    (
+        PatientSex = female ->
+            covered_female(C)
+        ;
+        PatientSex = male ->
+            covered_male(C)
+    ).
+
+% Excluded conditions: infertility due to natural physiologic processes.
+excluded_condition(natural_menopause).
+excluded_condition(natural_perimenopause).
+excluded_condition(other_natural_physiologic_process).
+
+% Coverage for female patients.
+covered_female(C) :-
+    claim_sex_of_patients_partner(C, PartnerSex),
+    patient_age_at_time_of_service(C, Age),
+    (
+        % Case: Female with male partner.
+        PartnerSex = male ->
+            (
+                Age < 35 ->
+                    (
+                        ( claim_num_months_timed_unprotected_intercourse(C, M), M >= 12 )
+                        ;
+                        ( claim_num_cycles_donor_insemination(C, N), N >= 12 )
+                    ),
+                    fsh_check(C, 12, Age)
+                ;
+                Age >= 35 ->
+                    (
+                        ( claim_num_months_timed_unprotected_intercourse(C, M), M >= 6 )
+                        ;
+                        ( claim_num_cycles_donor_insemination(C, N), N >= 6 )
+                    ),
+                    fsh_check(C, 6, Age)
+            )
+        ;
+        % Case: Female without a male partner.
+        PartnerSex = no_partner ->
+            (
+                Age < 35 ->
+                    claim_num_cycles_donor_insemination(C, N), N >= 12,
+                    fsh_check(C, 12, Age)
+                ;
+                Age >= 35 ->
+                    claim_num_cycles_donor_insemination(C, N), N >= 6,
+                    fsh_check(C, 6, Age)
+            )
+    ).
+
+% Coverage for male patients.
+covered_male(C) :-
+    claim_sex_of_patients_partner(C, PartnerSex),
+    PartnerSex = female,
+    claim_age_of_patients_female_partner(C, PartnerAge),
+    (
+        PartnerAge < 35 ->
+            claim_num_months_timed_unprotected_intercourse(C, M), M >= 12
+        ;
+        PartnerAge >= 35 ->
+            claim_num_months_timed_unprotected_intercourse(C, M), M >= 6
+    ).
+
+% Checks for the day‑3 FSH test requirements.
+% RecencyMonths is the maximum allowed months difference.
+% Age is the patient's age at time of service.
+fsh_check(C, RecencyMonths, Age) :-
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, RecencyMonths),
+    (
+        Age < 40 ->
+            Level < 19
+        ;
+            Age >= 40 ->
+            day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+            \+ exists_test_with_level_at_least_19(Tests)
+    ).
+

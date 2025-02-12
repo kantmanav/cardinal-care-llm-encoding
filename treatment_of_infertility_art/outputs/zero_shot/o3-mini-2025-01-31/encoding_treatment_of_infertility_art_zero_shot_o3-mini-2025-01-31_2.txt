@@ -1,0 +1,57 @@
+covered(C) :-
+    % ART service type must be one of the eligible services
+    claim_service_type(C, ServiceType),
+    ( ServiceType = ivf_for_fertility_preservation ; ServiceType = cryopreservation_for_fertility_preservation ),
+    % Service must be received in-network (ART services are not provided for out‐of‐network care)
+    claim_location_service_received(C, Location),
+    in_network(Location),
+    % The patient must be believed to be fertile
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    % There must be a planned service that results in infertility
+    claim_planned_service(C, Planned),
+    infertility_service(Planned),
+    % If eggs are going to be retrieved for use then FSH criteria must be met
+    ( claim_will_be_retrieving_eggs_for_use(C, yes)
+      -> check_fsh(C)
+      ;  true
+    ).
+
+% Helper predicate: in-network locations
+in_network(stanford_health_care).
+in_network(menlo_medical_clinic).
+in_network(sutter_health_palo_alto_medical_foundation).
+in_network(tier_two_in_network).
+
+% Helper predicate: valid infertility causing planned services
+infertility_service(chemotherapy).
+infertility_service(pelvic_radiotherapy).
+infertility_service(gonadotoxic_therapy).
+infertility_service(orchiectomy).
+infertility_service(oophorectomy).
+infertility_service(hysterectomy).
+infertility_service(orchiectomy_for_treatment_of_disease).
+infertility_service(oophorectomy_for_treatment_of_disease).
+infertility_service(other_treatment_demonstrated_to_result_in_infertility).
+infertility_service(other).
+
+% Helper predicate to check FSH criteria for egg retrieval
+check_fsh(C) :-
+    patient_age_at_time_of_service(C, Age),
+    Age < 40,
+    most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+    Level < 19.
+
+check_fsh(C) :-
+    patient_age_at_time_of_service(C, Age),
+    Age >= 40,
+    claim_patient_has_premature_ovarian_failure(C, yes),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+    Level < 19.
+
+check_fsh(C) :-
+    patient_age_at_time_of_service(C, Age),
+    Age >= 40,
+    claim_patient_has_premature_ovarian_failure(C, no),
+    day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+    \+ exists_test_with_level_at_least_19(Tests).
+
