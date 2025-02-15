@@ -1,0 +1,30 @@
+covered(C) :-
+    claim_hospitalization_reason(C, Reason),
+    (Reason = sickness ; Reason = accidental_injury),
+    claim_hospitalization_occurred_months_from_effective_date(C, HospMonths),
+    HospMonths < 12,
+    claim_agreement_signed(C, yes),
+    claim_premium_paid(C, yes),
+    claim_fraud_occurred(C, no),
+    claim_misrepresentation_occurred(C, no),
+    claim_material_witholding_occurred(C, no),
+    (
+        HospMonths < 7
+        ;
+        (
+            HospMonths >= 7,
+            claim_wellness_visit_occurred_months_from_effective_date(C, VisitMonths),
+            VisitMonths =< 6,
+            claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmMonths),
+            ConfirmMonths =< 7
+        )
+    ),
+    claim_hospitalization_causal_event(C, Cause),
+    Cause \= skydiving,
+    Cause \= military_service,
+    Cause \= firefighting_service,
+    Cause \= police_service,
+    claim_country_of_sickness_or_injury(C, _),
+    claim_patient_age(C, Age),
+    Age < 80.
+

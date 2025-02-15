@@ -1,0 +1,18 @@
+```prolog
+covered(C) :-
+    claim_service_type(C, ServiceType),
+    (ServiceType = ivf_for_fertility_preservation ; ServiceType = cryopreservation_for_fertility_preservation),
+    claim_location_service_received(C, Location),
+    Location \= other,
+    claim_patient_is_believed_to_be_fertile(C, yes),
+    claim_planned_service(C, PlannedService),
+    member(PlannedService, [chemotherapy, pelvic_radiotherapy, gonadotoxic_therapy, orchiectomy, oophorectomy, hysterectomy, other_treatment_demonstrated_to_result_in_infertility]),
+    ( claim_will_be_retrieving_eggs_for_use(C, yes) ->
+        patient_age_at_time_of_service(C, Age),
+        ( (Age >=39, most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)), claim_date_service_received(C, ServiceDate), leq_n_months_diff(TestDate, ServiceDate, 6)) ;
+          (Age <39, most_recent_day_3_fsh_test(C, fsh_test(Level, _, _))) ),
+        ( ( (Age <40 ; (Age >=40, claim_patient_has_premature_ovarian_failure(C, yes)) ), Level <19 ) ;
+          ( Age >=40, claim_patient_has_premature_ovarian_failure(C, no), day_3_fsh_tests_since_age_40_in_claim(C, Tests), \+ exists_test_with_level_at_least_19(Tests) ) )
+    ; true ).
+```
+

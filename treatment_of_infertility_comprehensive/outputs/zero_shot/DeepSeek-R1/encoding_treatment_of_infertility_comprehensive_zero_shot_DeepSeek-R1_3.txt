@@ -1,0 +1,73 @@
+```prolog
+covered(C) :-
+    claim_service_type(C, Service),
+    (Service = ovulation_induction_cycle_with_menotropins ; Service = intrauterine_insemination),
+    claim_demonstrated_and_documented_condition_causing_infertility(C, other),
+    claim_patient_has_had_voluntary_sterilization(C, no),
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+    meets_conception_attempt_requirements(C),
+    meets_fsh_requirements(C),
+    patient_is_infertile(C).
+
+meets_conception_attempt_requirements(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    (
+        (Age < 35, 
+            (
+                (claim_sex_of_patients_partner(C, male), 
+                (claim_num_months_timed_unprotected_intercourse(C, M), M >= 12 ; 
+                 claim_num_cycles_donor_insemination(C, C1), C1 >= 12)
+            ;
+                (claim_sex_of_patients_partner(C, no_partner), 
+                claim_num_cycles_donor_insemination(C, C1), C1 >= 12
+            )
+        )
+        ;
+        (Age >= 35,
+            (
+                (claim_sex_of_patients_partner(C, male), 
+                (claim_num_months_timed_unprotected_intercourse(C, M), M >= 6 ; 
+                 claim_num_cycles_donor_insemination(C, C1), C1 >= 6)
+            ;
+                (claim_sex_of_patients_partner(C, no_partner), 
+                claim_num_cycles_donor_insemination(C, C1), C1 >= 6
+            )
+        )
+    ).
+
+meets_conception_attempt_requirements(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, male),
+    claim_sex_of_patients_partner(C, female),
+    claim_age_of_patients_female_partner(C, PAge),
+    (PAge < 35 -> Required = 12 ; Required = 6),
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= Required.
+
+meets_fsh_requirements(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    (
+        (patient_age_at_time_of_service(C, Age), Age < 35,
+            (claim_sex_of_patients_partner(C, male) ; claim_sex_of_patients_partner(C, no_partner)),
+            most_recent_day_3_fsh_test(C, fsh_test(Lvl, TDate, _)),
+            claim_date_service_received(C, SDate),
+            leq_n_months_diff(TDate, SDate, 12),
+            Lvl < 19
+    ;
+        (patient_age_at_time_of_service(C, Age), Age >= 35,
+            (claim_sex_of_patients_partner(C, male) ; claim_sex_of_patients_partner(C, no_partner)),
+            most_recent_day_3_fsh_test(C, fsh_test(Lvl, TDate, _)),
+            claim_date_service_received(C, SDate),
+            leq_n_months_diff(TDate, SDate, 6),
+            (Age < 40 -> 
+                Lvl < 19
+            ; 
+                day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+                \+ exists_test_with_level_at_least_19(Tests)
+            )
+    ).
+
+meets_fsh_requirements(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, male).
+```
+

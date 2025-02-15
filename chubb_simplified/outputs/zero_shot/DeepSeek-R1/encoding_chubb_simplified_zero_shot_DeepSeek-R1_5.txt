@@ -1,0 +1,20 @@
+```prolog
+covered(C) :-
+    claim_agreement_signed(C, yes),
+    claim_premium_paid(C, yes),
+    \+ (claim_fraud_occurred(C, yes); claim_misrepresentation_occurred(C, yes); claim_material_witholding_occurred(C, yes)),
+    claim_hospitalization_occurred_months_from_effective_date(C, H),
+    H < 12,
+    (   H =< 7
+    ;   claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WC),
+        WC =< 7,
+        claim_wellness_visit_occurred_months_from_effective_date(C, WV),
+        WV =< 6
+    ),
+    claim_hospitalization_reason(C, Reason),
+    (Reason = sickness; Reason = accidental_injury),
+    \+ (claim_hospitalization_causal_event(C, skydiving); claim_hospitalization_causal_event(C, military_service); claim_hospitalization_causal_event(C, firefighting_service); claim_hospitalization_causal_event(C, police_service)),
+    claim_patient_age(C, Age),
+    Age < 80.
+```
+

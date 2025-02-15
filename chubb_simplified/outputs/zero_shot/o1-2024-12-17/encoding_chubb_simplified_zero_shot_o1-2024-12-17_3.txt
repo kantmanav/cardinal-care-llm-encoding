@@ -1,0 +1,34 @@
+covered(C) :-
+    % Must be for sickness or accidental injury
+    claim_hospitalization_reason(C, Reason),
+    (Reason = sickness; Reason = accidental_injury),
+    
+    % Hospitalization must occur within 12 months
+    claim_hospitalization_occurred_months_from_effective_date(C, HospMonths),
+    HospMonths < 12,
+    
+    % Policy in effect requirements
+    claim_agreement_signed(C, yes),
+    claim_premium_paid(C, yes),
+    claim_fraud_occurred(C, no),
+    claim_misrepresentation_occurred(C, no),
+    claim_material_witholding_occurred(C, no),
+    check_wellness_condition(C, HospMonths),
+    
+    % Exclusions
+    claim_hospitalization_causal_event(C, other),
+    claim_patient_age(C, Age),
+    Age < 80,
+    
+    % Location fact (coverage is worldwide, so no restriction is applied)
+    claim_country_of_sickness_or_injury(C, _).
+
+check_wellness_condition(C, HospMonths) :-
+    (   HospMonths < 7
+    ->  true
+    ;   claim_wellness_visit_occurred_months_from_effective_date(C, VisitMonth),
+        VisitMonth =< 6,
+        claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmMonth),
+        ConfirmMonth =< 7
+    ).
+

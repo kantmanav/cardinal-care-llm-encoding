@@ -1,0 +1,55 @@
+```prolog
+covered(C) :-
+    claim_service_type(C, Service),
+    member(Service, [ovulation_induction_cycle_with_menotropins, intrauterine_insemination]),
+    claim_demonstrated_and_documented_condition_causing_infertility(C, Condition),
+    \+ member(Condition, [natural_menopause, natural_perimenopause, natural_male_reproductive_aging, other_natural_physiologic_process]),
+    claim_patient_has_had_voluntary_sterilization(C, no),
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+    patient_is_infertile(C),
+    claim_sex_of_patient_trying_to_conceive(C, Sex),
+    ( (Sex = female,
+        patient_age_at_time_of_service(C, Age),
+        claim_sex_of_patients_partner(C, PartnerSex),
+        ( (Age < 35, PartnerSex = male,
+            (claim_num_months_timed_unprotected_intercourse(C, M), M >= 12 ; claim_num_cycles_donor_insemination(C, Cc), Cc >= 12),
+            most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+            claim_date_service_received(C, ServiceDate),
+            leq_n_months_diff(TestDate, ServiceDate, 12),
+            Level < 19)
+          ; (Age < 35, (PartnerSex = female ; PartnerSex = no_partner),
+            claim_num_cycles_donor_insemination(C, Cc), Cc >= 12,
+            most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+            claim_date_service_received(C, ServiceDate),
+            leq_n_months_diff(TestDate, ServiceDate, 12),
+            Level < 19)
+          ; (Age >= 35, PartnerSex = male,
+            (claim_num_months_timed_unprotected_intercourse(C, M), M >= 6 ; claim_num_cycles_donor_insemination(C, Cc), Cc >= 6),
+            most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+            claim_date_service_received(C, ServiceDate),
+            leq_n_months_diff(TestDate, ServiceDate, 6),
+            ( (Age < 40, Level < 19)
+              ; (Age >= 40,
+                day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+                \+ exists_test_with_level_at_least_19(Tests))
+            ))
+          ; (Age >= 35, (PartnerSex = female ; PartnerSex = no_partner),
+            claim_num_cycles_donor_insemination(C, Cc), Cc >= 6,
+            most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+            claim_date_service_received(C, ServiceDate),
+            leq_n_months_diff(TestDate, ServiceDate, 6),
+            ( (Age < 40, Level < 19)
+              ; (Age >= 40,
+                day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+                \+ exists_test_with_level_at_least_19(Tests))
+            ))
+        ))
+      ; (Sex = male,
+        claim_sex_of_patients_partner(C, PartnerSex),
+        PartnerSex = female,
+        claim_age_of_patients_female_partner(C, PartnerAge),
+        ( (PartnerAge < 35, claim_num_months_timed_unprotected_intercourse(C, M), M >= 12)
+          ; (PartnerAge >= 35, claim_num_months_timed_unprotected_intercourse(C, M), M >= 6)
+        ))
+    ).
+
