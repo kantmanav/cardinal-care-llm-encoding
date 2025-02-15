@@ -1,18 +1,25 @@
 covered(C) :-
+    % Policy in effect conditions
     claim_agreement_signed(C, yes),
     claim_premium_paid(C, yes),
+    claim_wellness_visit_confirmation_provided_months_from_effective_date(C, Conf),
+    claim_wellness_visit_occurred_months_from_effective_date(C, Visit),
+    Conf =< 7,
+    Visit =< 6,
+    % No cancellation due to fraud, misrepresentation or material withholding
     claim_fraud_occurred(C, no),
     claim_misrepresentation_occurred(C, no),
-    claim_material_witholding_occurred(C, no),
-    claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WConf),
-    claim_wellness_visit_occurred_months_from_effective_date(C, WOccur),
-    ( WConf =:= 0 ; (WConf > 0, WConf =< 7, WOccur =< 6) ),
+    claim_material_withholding_occurred(C, no),
+    % The hospitalization must be for sickness or accidental injury
     claim_hospitalization_reason(C, Reason),
-    ( Reason = sickness ; Reason = accidental_injury ),
+    (Reason = sickness ; Reason = accidental_injury),
+    % Exclusions: hospitalization must not be due to an excluded causal event
     claim_hospitalization_causal_event(C, Causal),
     Causal = other,
+    % Exclusion: patient age must be less than 80
     claim_patient_age(C, Age),
     Age < 80,
-    claim_hospitalization_occurred_months_from_effective_date(C, HMon),
-    HMon =< 12.
+    % Hospitalization must occur during the policy term (within 12 months)
+    claim_hospitalization_occurred_months_from_effective_date(C, HospM),
+    HospM < 12.
 

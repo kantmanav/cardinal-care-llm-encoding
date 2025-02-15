@@ -16,7 +16,7 @@ Valid inputs: yes, no
 Fact: claim_misrepresentation_occurred(C, Value)
 Valid inputs: yes, no
 
-Fact: claim_material_witholding_occurred(C, Value)
+Fact: claim_material_withholding_occurred(C, Value)
 Valid inputs: yes, no
 
 Fact: claim_wellness_visit_occurred_months_from_effective_date(C, Value)

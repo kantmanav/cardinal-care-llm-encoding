@@ -1,26 +1,34 @@
 ```prolog
 covered(C) :-
-    % Condition 1.1: Policy is in effect at the time of hospitalization
+    % Condition 1.1: Hospitalization reason must be sickness or accidental injury
+    (claim_hospitalization_reason(C, sickness); 
+     claim_hospitalization_reason(C, accidental_injury)),
+    
+    % Condition 1.1: Agreement must be signed
     claim_agreement_signed(C, yes),
+    
+    % Condition 1.1: Premium must be paid
     claim_premium_paid(C, yes),
-    claim_hospitalization_occurred_months_from_effective_date(C, MonthsHospitalization),
-    claim_wellness_visit_occurred_months_from_effective_date(C, WellnessVisitMonths),
-    claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WellnessConfirmationMonths),
-    (
-        WellnessVisitMonths =< 6,
-        WellnessConfirmationMonths =< 7
-    ; 
-        WellnessVisitMonths > 6
-    ),
+    
+    % Condition 1.1: Written confirmation of wellness visit provided within allowable time frame
+    claim_wellness_visit_occurred_months_from_effective_date(C, VisitMonths),
+    VisitMonths =< 6,
+    claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmationMonths),
+    ConfirmationMonths =< 7,
+    
+    % Condition 1.1: Policy must not be cancelled
     claim_fraud_occurred(C, no),
     claim_misrepresentation_occurred(C, no),
-    claim_material_witholding_occurred(C, no),
-    MonthsHospitalization < 12,
-    % General Exclusions
-    claim_hospitalization_reason(C, Reason),
-    (Reason = sickness; Reason = accidental_injury),
-    claim_hospitalization_causal_event(C, CausalEvent),
-    \+ member(CausalEvent, [skydiving, military_service, firefighting_service, police_service]),
+    claim_material_withholding_occurred(C, no),
+    
+    % General Exclusions 2.1: Causal event exclusions
+    claim_hospitalization_causal_event(C, CasualEvent),
+    CasualEvent \= skydiving,
+    CasualEvent \= military_service,
+    CasualEvent \= firefighting_service,
+    CasualEvent \= police_service,
+    
+    % General Exclusions 2.1: Patient age must be less than 80
     claim_patient_age(C, Age),
     Age < 80.
 ```

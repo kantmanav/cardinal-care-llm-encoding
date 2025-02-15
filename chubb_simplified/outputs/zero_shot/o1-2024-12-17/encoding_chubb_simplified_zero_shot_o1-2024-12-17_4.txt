@@ -1,41 +1,46 @@
 covered(C) :-
-    % Must be hospitalization for sickness or accidental injury
+    % Must be for sickness or accidental injury
     claim_hospitalization_reason(C, Reason),
     (Reason = sickness ; Reason = accidental_injury),
 
-    % Hospitalization must occur before policy's 12-month term ends
-    claim_hospitalization_occurred_months_from_effective_date(C, H),
-    H < 12,
-
-    % Policy requirements for being in effect
+    % Policy in effect conditions: agreement signed, premium paid
     claim_agreement_signed(C, yes),
     claim_premium_paid(C, yes),
+
+    % No fraud/misrepresentation/material withholding
     claim_fraud_occurred(C, no),
     claim_misrepresentation_occurred(C, no),
-    claim_material_witholding_occurred(C, no),
-    condition_1_3_satisfied_or_pending(C),
+    claim_material_withholding_occurred(C, no),
 
-    % No excluded causal event
+    % Condition 1.3: Either hospitalization <= 7 months from effective date
+    % or timely wellness visit + confirmation
+    claim_hospitalization_occurred_months_from_effective_date(C, HMonths),
+    (
+      HMonths =< 7
+      ;
+      (
+        HMonths > 7,
+        claim_wellness_visit_occurred_months_from_effective_date(C, WVMonth),
+        WVMonth =< 6,
+        claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WCMonth),
+        WCMonth =< 7
+      )
+    ),
+
+    % Must be within the one-year policy term
+    HMonths < 12,
+
+    % Exclusions: no skydiving, military, firefighting, police
     claim_hospitalization_causal_event(C, Event),
-    \+ member(Event, [skydiving, military_service, firefighting_service, police_service]),
+    Event \= skydiving,
+    Event \= military_service,
+    Event \= firefighting_service,
+    Event \= police_service,
 
-    % Worldwide coverage (must use the fact, but there is no location restriction)
-    claim_country_of_sickness_or_injury(C, Location),
-    (Location = usa ; Location = non_usa),
-
-    % Age under 80
+    % Age < 80
     claim_patient_age(C, Age),
-    Age < 80.
+    Age < 80,
 
-condition_1_3_satisfied_or_pending(C) :-
-    % If hospitalization occurs at or before 7 months, the condition can still be pending;
-    % if after 7 months, wellness visit and confirmation must have been done on time.
-    claim_hospitalization_occurred_months_from_effective_date(C, H),
-    (   H =< 7
-    ->  true
-    ;   claim_wellness_visit_occurred_months_from_effective_date(C, W),
-        W =< 6,
-        claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WC),
-        WC =< 7
-    ).
+    % Worldwide coverage (must use the fact, but no restriction on where)
+    claim_country_of_sickness_or_injury(C, _).
 

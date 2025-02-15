@@ -1,29 +1,31 @@
 ```prolog
 covered(C) :-
+    policy_in_effect(C),
+    (claim_hospitalization_reason(C, sickness);claim_hospitalization_reason(C, accidental_injury),
+    \+excluded_causal_event(C),
+    claim_patient_age(C, Age),
+    Age < 80.
+
+policy_in_effect(C) :-
     claim_agreement_signed(C, yes),
     claim_premium_paid(C, yes),
-    claim_hospitalization_occurred_months_from_effective_date(C, H_Months),
-    ( H_Months < 7
-    ; H_Months >= 7,
-      claim_wellness_visit_occurred_months_from_effective_date(C, W_Months),
-      W_Months =< 6,
-      claim_wellness_visit_confirmation_provided_months_from_effective_date(C, C_Months),
-      C_Months =< 7
+    claim_hospitalization_occurred_months_from_effective_date(C, HMonths),
+    HMonths < 12,
+    (   HMonths < 7
+    ;   (   claim_wellness_visit_confirmation_provided_months_from_effective_date(C, CMonths),
+            CMonths =< 7,
+            claim_wellness_visit_occurred_months_from_effective_date(C, VMonths),
+            VMonths =< 6
+        )
     ),
-    \+ ( claim_fraud_occurred(C, yes)
-       ; claim_misrepresentation_occurred(C, yes)
-       ; claim_material_withholding_occurred(C, yes)
-       ; H_Months >= 12
-       ),
-    ( claim_hospitalization_reason(C, sickness)
-    ; claim_hospitalization_reason(C, accidental_injury)
-    ),
-    \+ ( claim_hospitalization_causal_event(C, skydiving)
-       ; claim_hospitalization_causal_event(C, military_service)
-       ; claim_hospitalization_causal_event(C, firefighting_service)
-       ; claim_hospitalization_causal_event(C, police_service)
-       ; claim_patient_age(C, Age),
-         Age >= 80
-       ).
+    \+ (   claim_fraud_occurred(C, yes)
+        ;   claim_misrepresentation_occurred(C, yes)
+        ;   claim_material_withholding_occurred(C, yes)
+        ).
+
+excluded_causal_event(C) :- claim_hospitalization_causal_event(C, skydiving).
+excluded_causal_event(C) :- claim_hospitalization_causal_event(C, military_service).
+excluded_causal_event(C) :- claim_hospitalization_causal_event(C, firefighting_service).
+excluded_causal_event(C) :- claim_hospitalization_causal_event(C, police_service).
 ```
 

@@ -1,30 +1,46 @@
 covered(C) :-
     claim_hospitalization_reason(C, Reason),
     (Reason = sickness ; Reason = accidental_injury),
-    claim_hospitalization_occurred_months_from_effective_date(C, HospMonths),
-    HospMonths < 12,
+    policy_in_effect(C),
+    claim_hospitalization_causal_event(C, Event),
+    Event \= skydiving,
+    Event \= military_service,
+    Event \= firefighting_service,
+    Event \= police_service,
+    claim_patient_age(C, Age),
+    Age < 80,
+    claim_country_of_sickness_or_injury(C, _).
+
+policy_in_effect(C) :-
     claim_agreement_signed(C, yes),
     claim_premium_paid(C, yes),
+    no_cancellation(C),
+    condition_13_ok(C).
+
+no_cancellation(C) :-
     claim_fraud_occurred(C, no),
     claim_misrepresentation_occurred(C, no),
-    claim_material_witholding_occurred(C, no),
+    claim_material_withholding_occurred(C, no),
+    claim_hospitalization_occurred_months_from_effective_date(C, HMonths),
+    HMonths =< 12.
+
+condition_13_ok(C) :-
+    claim_hospitalization_occurred_months_from_effective_date(C, H),
     (
-        HospMonths < 7
-        ;
-        (
-            HospMonths >= 7,
-            claim_wellness_visit_occurred_months_from_effective_date(C, VisitMonths),
-            VisitMonths =< 6,
-            claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmMonths),
-            ConfirmMonths =< 7
-        )
-    ),
-    claim_hospitalization_causal_event(C, Cause),
-    Cause \= skydiving,
-    Cause \= military_service,
-    Cause \= firefighting_service,
-    Cause \= police_service,
-    claim_country_of_sickness_or_injury(C, _),
-    claim_patient_age(C, Age),
-    Age < 80.
+      H =< 6
+      ;
+      (
+        H > 6, H =< 7,
+        claim_wellness_visit_occurred_months_from_effective_date(C, WV),
+        WV =< 6
+      )
+      ;
+      (
+        H > 7,
+        claim_wellness_visit_occurred_months_from_effective_date(C, WV2),
+        WV2 =< 6,
+        claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WVC),
+        WVC =< 7
+      )
+    ).
 

@@ -1,27 +1,26 @@
 ```prolog
 covered(C) :-
-    % Condition 1.1: Policy must be in effect
+    % Policy in effect conditions
     claim_hospitalization_reason(C, Reason),
     (Reason = sickness; Reason = accidental_injury),
     claim_agreement_signed(C, yes),
     claim_premium_paid(C, yes),
-    claim_fraud_occurred(C, no),
-    claim_misrepresentation_occurred(C, no),
-    claim_material_witholding_occurred(C, no),
-    (
-        claim_wellness_visit_occurred_months_from_effective_date(C, VisitMonths),
-        VisitMonths =< 6,
-        claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmationMonths),
-        ConfirmationMonths =< 7
-    ;
-        \+ claim_wellness_visit_occurred_months_from_effective_date(C, _)
-    ),
     claim_hospitalization_occurred_months_from_effective_date(C, HospitalizationMonths),
     HospitalizationMonths =< 12,
-
-    % Condition 2.1: Exclusions
-    claim_hospitalization_causal_event(C, Event),
-    \+ member(Event, [skydiving, military_service, firefighting_service, police_service]),
+    claim_fraud_occurred(C, no),
+    claim_misrepresentation_occurred(C, no),
+    claim_material_withholding_occurred(C, no),
+    claim_wellness_visit_occurred_months_from_effective_date(C, WellnessVisitMonths),
+    WellnessVisitMonths =< 6,
+    claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmationMonths),
+    ConfirmationMonths =< 7,
+    
+    % Exclusion conditions
+    claim_hospitalization_causal_event(C, CausalEvent),
+    CausalEvent \= skydiving,
+    CausalEvent \= military_service,
+    CausalEvent \= firefighting_service,
+    CausalEvent \= police_service,
     claim_patient_age(C, Age),
     Age < 80.
 ```

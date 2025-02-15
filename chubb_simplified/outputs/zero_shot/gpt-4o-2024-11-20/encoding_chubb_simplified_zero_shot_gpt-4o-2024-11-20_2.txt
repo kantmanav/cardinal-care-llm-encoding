@@ -1,39 +1,21 @@
 ```prolog
 covered(C) :-
-    % Condition: Hospitalization must be due to sickness or accidental injury
     claim_hospitalization_reason(C, Reason),
     (Reason = sickness; Reason = accidental_injury),
-
-    % Condition: Agreement must be signed
     claim_agreement_signed(C, yes),
-
-    % Condition: Applicable premium must be paid
     claim_premium_paid(C, yes),
-
-    % Condition: No fraud, misrepresentation, or material withholding occurred
     claim_fraud_occurred(C, no),
     claim_misrepresentation_occurred(C, no),
-    claim_material_witholding_occurred(C, no),
-
-    % Condition: Wellness visit and confirmation provided (if past 6 months from effective date)
+    claim_material_withholding_occurred(C, no),
     claim_hospitalization_occurred_months_from_effective_date(C, HospitalizationMonths),
-    (HospitalizationMonths =< 6;
-     (
-        claim_wellness_visit_occurred_months_from_effective_date(C, WellnessVisitMonths),
-        claim_wellness_visit_confirmation_provided_months_from_effective_date(C, ConfirmationMonths),
-        WellnessVisitMonths =< 6,
-        ConfirmationMonths =< 7
-     )),
-    
-    % Condition: Patient not engaged in excluded causal events
-    claim_hospitalization_causal_event(C, CausalEvent),
-    CausalEvent \= skydiving,
-    CausalEvent \= military_service,
-    CausalEvent \= firefighting_service,
-    CausalEvent \= police_service,
-
-    % Condition: Patient's age is under 80
+    HospitalizationMonths =< 12,
+    claim_hospitalization_causal_event(C, Cause),
+    \+ member(Cause, [skydiving, military_service, firefighting_service, police_service]),
     claim_patient_age(C, Age),
-    Age < 80.
+    Age < 80,
+    claim_wellness_visit_occurred_months_from_effective_date(C, WellnessVisitMonths),
+    WellnessVisitMonths =< 6,
+    claim_wellness_visit_confirmation_provided_months_from_effective_date(C, WellnessConfirmationMonths),
+    WellnessConfirmationMonths =< 7.
 ```
 
