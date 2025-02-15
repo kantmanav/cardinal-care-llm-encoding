@@ -1,0 +1,107 @@
+covered(C) :-
+    patient_is_infertile(C),
+    claim_service_type(C, S),
+    ( S = ovulation_induction_cycle_with_menotropins
+    ; S = intrauterine_insemination
+    ),
+    claim_patient_has_had_voluntary_sterilization(C, no),
+    claim_demonstrated_and_documented_condition_causing_infertility(C, Cond),
+    Cond \= natural_menopause,
+    Cond \= natural_perimenopause,
+    Cond \= natural_male_reproductive_aging,
+    Cond \= other_natural_physiologic_process,
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+    coverage_criteria(C).
+
+coverage_criteria(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    claim_sex_of_patients_partner(C, PartnerSex),
+    coverage_criteria_female(Age, PartnerSex, C).
+
+coverage_criteria(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, male),
+    claim_sex_of_patients_partner(C, PartnerSex),
+    coverage_criteria_male(PartnerSex, C).
+
+coverage_criteria_female(Age, male, C) :-
+    Age < 35,
+    coverage_criteria_female_under_35_with_male_partner(C).
+
+coverage_criteria_female(Age, male, C) :-
+    Age >= 35,
+    coverage_criteria_female_35_or_older_with_male_partner(C).
+
+coverage_criteria_female(Age, PartnerSex, C) :-
+    PartnerSex \= male,
+    Age < 35,
+    coverage_criteria_female_under_35_without_male_partner(C).
+
+coverage_criteria_female(Age, PartnerSex, C) :-
+    PartnerSex \= male,
+    Age >= 35,
+    coverage_criteria_female_35_or_older_without_male_partner(C).
+
+coverage_criteria_female_under_35_with_male_partner(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    claim_num_cycles_donor_insemination(C, D),
+    ( M >= 12 ; D >= 12 ),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 12),
+    Level < 19.
+
+coverage_criteria_female_under_35_without_male_partner(C) :-
+    claim_num_cycles_donor_insemination(C, D),
+    D >= 12,
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 12),
+    Level < 19.
+
+coverage_criteria_female_35_or_older_with_male_partner(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    claim_num_cycles_donor_insemination(C, D),
+    ( M >= 6 ; D >= 6 ),
+    most_recent_day_3_fsh_test(C, fsh_test(_, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 6),
+    coverage_criteria_female_35_or_older_fsh_levels(C).
+
+coverage_criteria_female_35_or_older_without_male_partner(C) :-
+    claim_num_cycles_donor_insemination(C, D),
+    D >= 6,
+    most_recent_day_3_fsh_test(C, fsh_test(_, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 6),
+    coverage_criteria_female_35_or_older_fsh_levels(C).
+
+coverage_criteria_female_35_or_older_fsh_levels(C) :-
+    patient_age_at_time_of_service(C, Age),
+    Age < 40,
+    most_recent_day_3_fsh_test(C, fsh_test(Level, _, _)),
+    Level < 19.
+
+coverage_criteria_female_35_or_older_fsh_levels(C) :-
+    patient_age_at_time_of_service(C, Age),
+    Age >= 40,
+    day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+    \+ exists_test_with_level_at_least_19(Tests).
+
+coverage_criteria_male(female, C) :-
+    claim_age_of_patients_female_partner(C, FAge),
+    (  (FAge < 35, coverage_criteria_male_with_female_partner_under_35(C))
+    ;  (FAge >= 35, coverage_criteria_male_with_female_partner_35_or_older(C)) ).
+
+coverage_criteria_male(PartnerSex, _) :-
+    PartnerSex \= female,
+    fail.
+
+coverage_criteria_male_with_female_partner_under_35(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= 12.
+
+coverage_criteria_male_with_female_partner_35_or_older(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= 6.
+

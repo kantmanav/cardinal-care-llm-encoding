@@ -1,0 +1,113 @@
+covered(C) :-
+    % The claimed service must be ovulation induction with menotropins or intrauterine insemination
+    claim_service_type(C, Service),
+    ( Service = ovulation_induction_cycle_with_menotropins
+    ; Service = intrauterine_insemination
+    ),
+
+    % Must satisfy infertility criteria (supporting predicate)
+    patient_is_infertile(C),
+
+    % Patient must not have had voluntary sterilization
+    claim_patient_has_had_voluntary_sterilization(C, no),
+
+    % Condition causing infertility must not be one of the natural physiologic processes
+    claim_demonstrated_and_documented_condition_causing_infertility(C, other),
+
+    % A successful pregnancy cannot be attained through a less costly covered treatment
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+
+    % Now branch on the sex of the patient to apply the appropriate criteria
+    claim_sex_of_patient_trying_to_conceive(C, Sex),
+    (   % ----------------------- FEMALE PATIENT -----------------------
+        Sex = female ->
+        patient_age_at_time_of_service(C, Age),
+        claim_sex_of_patients_partner(C, PartnerSex),
+        (   % Female under 35
+            Age < 35 ->
+            (   PartnerSex = male ->
+                needs_female_under_35_with_male_partner(C)
+            ;   PartnerSex = female
+                ; PartnerSex = no_partner ->
+                needs_female_under_35_without_male_partner(C)
+            )
+        ;   % Female 35 or older
+            Age >= 35 ->
+            (   PartnerSex = male ->
+                needs_female_35_or_older_with_male_partner(C, Age)
+            ;   PartnerSex = female
+                ; PartnerSex = no_partner ->
+                needs_female_35_or_older_without_male_partner(C, Age)
+            )
+        )
+    ;   % ----------------------- MALE PATIENT -------------------------
+        Sex = male ->
+        claim_sex_of_patients_partner(C, PartnerSex),
+        % Policy only provides criteria for a male patient with a female partner
+        PartnerSex = female,
+        claim_age_of_patients_female_partner(C, FAge),
+        (   FAge < 35 ->
+            claim_num_months_timed_unprotected_intercourse(C, M),
+            M >= 12
+        ;   FAge >= 35 ->
+            claim_num_months_timed_unprotected_intercourse(C, M),
+            M >= 6
+        )
+    ).
+
+% -----------------------
+% FEMALE < 35, MALE PARTNER
+% -----------------------
+needs_female_under_35_with_male_partner(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    claim_num_cycles_donor_insemination(C, D),
+    ( M >= 12 ; D >= 12 ),
+    claim_date_service_received(C, SvcDate),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _Time)),
+    leq_n_months_diff(TestDate, SvcDate, 12),
+    Level < 19.
+
+% -----------------------
+% FEMALE < 35, NO MALE PARTNER
+% -----------------------
+needs_female_under_35_without_male_partner(C) :-
+    claim_num_cycles_donor_insemination(C, D),
+    D >= 12,
+    claim_date_service_received(C, SvcDate),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _Time)),
+    leq_n_months_diff(TestDate, SvcDate, 12),
+    Level < 19.
+
+% -----------------------
+% FEMALE ≥ 35, MALE PARTNER
+% -----------------------
+needs_female_35_or_older_with_male_partner(C, Age) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    claim_num_cycles_donor_insemination(C, D),
+    ( M >= 6 ; D >= 6 ),
+    claim_date_service_received(C, SvcDate),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _Time)),
+    leq_n_months_diff(TestDate, SvcDate, 6),
+    (   Age < 40 ->
+        Level < 19
+    ;   Age >= 40 ->
+        day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+        \+ exists_test_with_level_at_least_19(Tests)
+    ).
+
+% -----------------------
+% FEMALE ≥ 35, NO MALE PARTNER
+% -----------------------
+needs_female_35_or_older_without_male_partner(C, Age) :-
+    claim_num_cycles_donor_insemination(C, D),
+    D >= 6,
+    claim_date_service_received(C, SvcDate),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _Time)),
+    leq_n_months_diff(TestDate, SvcDate, 6),
+    (   Age < 40 ->
+        Level < 19
+    ;   Age >= 40 ->
+        day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+        \+ exists_test_with_level_at_least_19(Tests)
+    ).
+
