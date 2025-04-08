@@ -1,0 +1,3 @@
+- I had previously asked you to encode a Prolog rule that represents an insurance contract.
+- Please go over your current draft of this Prolog rule and make any corrections that you feel are necessary.
+- I have provided below all instructions that I had given you regarding the encoding of this contract, the contract itself, and your current draft of the Prolog rule representing this contract.

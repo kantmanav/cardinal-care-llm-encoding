@@ -1,0 +1,94 @@
+covered(C) :-
+    claim_service_type(C, S),
+    ( S = ovulation_induction_cycle_with_menotropins
+    ; S = intrauterine_insemination
+    ),
+    patient_is_infertile(C),
+    claim_patient_has_had_voluntary_sterilization(C, no),
+    claim_demonstrated_and_documented_condition_causing_infertility(C, other),
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+    ( scenario_f_under35_male_partner(C)
+    ; scenario_f_under35_no_male_partner(C)
+    ; scenario_f_35plus_male_partner(C)
+    ; scenario_f_35plus_no_male_partner(C)
+    ; scenario_male_under35_f_partner(C)
+    ; scenario_male_35plus_f_partner(C)
+    ).
+
+scenario_f_under35_male_partner(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    Age < 35,
+    claim_sex_of_patients_partner(C, male),
+    ( claim_num_months_timed_unprotected_intercourse(C, M),
+      M >= 12
+    ; claim_num_cycles_donor_insemination(C, DC),
+      DC >= 12
+    ),
+    meets_f_under35_fsh_req(C).
+
+scenario_f_under35_no_male_partner(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    Age < 35,
+    claim_sex_of_patients_partner(C, Partner),
+    Partner \= male,
+    claim_num_cycles_donor_insemination(C, DC),
+    DC >= 12,
+    meets_f_under35_fsh_req(C).
+
+scenario_f_35plus_male_partner(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    Age >= 35,
+    claim_sex_of_patients_partner(C, male),
+    ( claim_num_months_timed_unprotected_intercourse(C, M),
+      M >= 6
+    ; claim_num_cycles_donor_insemination(C, DC),
+      DC >= 6
+    ),
+    meets_f_35plus_fsh_req(C).
+
+scenario_f_35plus_no_male_partner(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    Age >= 35,
+    claim_sex_of_patients_partner(C, Partner),
+    Partner \= male,
+    claim_num_cycles_donor_insemination(C, DC),
+    DC >= 6,
+    meets_f_35plus_fsh_req(C).
+
+scenario_male_under35_f_partner(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, male),
+    claim_sex_of_patients_partner(C, female),
+    claim_age_of_patients_female_partner(C, AgeF),
+    AgeF < 35,
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= 12.
+
+scenario_male_35plus_f_partner(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, male),
+    claim_sex_of_patients_partner(C, female),
+    claim_age_of_patients_female_partner(C, AgeF),
+    AgeF >= 35,
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= 6.
+
+meets_f_under35_fsh_req(C) :-
+    most_recent_day_3_fsh_test(C, fsh_test(Level, Date, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(Date, ServiceDate, 12),
+    Level < 19.
+
+meets_f_35plus_fsh_req(C) :-
+    patient_age_at_time_of_service(C, Age),
+    claim_date_service_received(C, ServiceDate),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, Date, _)),
+    leq_n_months_diff(Date, ServiceDate, 6),
+    ( Age < 40 ->
+        Level < 19
+    ;   day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+        \+ exists_test_with_level_at_least_19(Tests)
+    ).
+

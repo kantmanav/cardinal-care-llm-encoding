@@ -1,0 +1,176 @@
+covered(C) :-
+    % 1) Must be a recognized infertility service.
+    claim_service_type(C, ServiceType),
+    ( ServiceType = ovulation_induction_cycle_with_menotropins
+    ; ServiceType = intrauterine_insemination
+    ),
+
+    % 2) Patient must meet the plan’s infertility criteria (predicate provided).
+    patient_is_infertile(C),
+
+    % 3) Patient (or partner) must not have had voluntary sterilization.
+    claim_patient_has_had_voluntary_sterilization(C, no),
+
+    % 4) Condition causing infertility must not be a natural physiologic process.
+    claim_demonstrated_and_documented_condition_causing_infertility(C, Condition),
+    \+ member(Condition, [natural_menopause,
+                          natural_perimenopause,
+                          natural_male_reproductive_aging,
+                          other_natural_physiologic_process]),
+
+    % 5) A successful pregnancy cannot be attained through less costly
+    %    covered treatment.
+    claim_successful_pregnancy_can_be_attained_through_less_costly_treatment_covered_by_plan(C, no),
+
+    % 6) Must meet specific criteria based on sex, partner, and age.
+    meets_partner_requirements(C).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Top-level dispatch for partner-based coverage criteria %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+meets_partner_requirements(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, female),
+    patient_age_at_time_of_service(C, Age),
+    claim_sex_of_patients_partner(C, PartnerSex),
+    female_scenario(C, Age, PartnerSex).
+
+meets_partner_requirements(C) :-
+    claim_sex_of_patient_trying_to_conceive(C, male),
+    claim_sex_of_patients_partner(C, PartnerSex),
+    male_scenario(C, PartnerSex).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Female scenarios by age and partner%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Female < 35 with male partner
+female_scenario(C, Age, male) :-
+    Age < 35,
+    meets_female_under_35_with_male_partner(C).
+% Female >= 35 with male partner
+female_scenario(C, Age, male) :-
+    Age >= 35,
+    meets_female_35plus_with_male_partner(C).
+% Female < 35 without male partner
+female_scenario(C, Age, no_partner) :-
+    Age < 35,
+    meets_female_under_35_no_male_partner(C).
+% Female >= 35 without male partner
+female_scenario(C, Age, no_partner) :-
+    Age >= 35,
+    meets_female_35plus_no_male_partner(C).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Male scenarios by partner sex %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Male patient with female partner
+male_scenario(C, female) :-
+    claim_age_of_patients_female_partner(C, PartnerAge),
+    (   PartnerAge < 35
+    ->  meets_male_with_female_partner_under_35(C)
+    ;   PartnerAge >= 35
+    ->  meets_male_with_female_partner_35plus(C)
+    ).
+
+% Male patient with no partner or male partner (no coverage text provided)
+male_scenario(_, no_partner) :- fail.
+male_scenario(_, male)       :- fail.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Detailed criteria for females (<35) with male partner     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+meets_female_under_35_with_male_partner(C) :-
+    % Must satisfy either ≥12 months unprotected intercourse
+    % OR ≥12 donor insemination cycles
+    (   claim_num_months_timed_unprotected_intercourse(C, M), M >= 12
+    ;   claim_num_cycles_donor_insemination(C, D), D >= 12
+    ),
+    check_fsh_test_under_35(C).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Detailed criteria for females (<35) without a male partner     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+meets_female_under_35_no_male_partner(C) :-
+    % Must have ≥12 donor insemination cycles; intercourse does not apply
+    claim_num_cycles_donor_insemination(C, D),
+    D >= 12,
+    check_fsh_test_under_35(C).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Detailed criteria for females (≥35) with male partner     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+meets_female_35plus_with_male_partner(C) :-
+    % Must satisfy either ≥6 months unprotected intercourse
+    % OR ≥6 donor insemination cycles
+    (   claim_num_months_timed_unprotected_intercourse(C, M), M >= 6
+    ;   claim_num_cycles_donor_insemination(C, D), D >= 6
+    ),
+    check_fsh_test_35plus(C).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Detailed criteria for females (≥35) without a male partner     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+meets_female_35plus_no_male_partner(C) :-
+    % Must have ≥6 donor insemination cycles; intercourse does not apply
+    claim_num_cycles_donor_insemination(C, D),
+    D >= 6,
+    check_fsh_test_35plus(C).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Detailed criteria for male patients  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Male with female partner under 35 => ≥12 months unprotected intercourse
+meets_male_with_female_partner_under_35(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= 12.
+
+% Male with female partner ≥35 => ≥6 months unprotected intercourse
+meets_male_with_female_partner_35plus(C) :-
+    claim_num_months_timed_unprotected_intercourse(C, M),
+    M >= 6.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Checks for day-3 FSH tests in female <35 scenarios       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check_fsh_test_under_35(C) :-
+    % Test within 12 months of service date, most recent FSH < 19
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 12),
+    Level < 19.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Checks for day-3 FSH tests in female ≥35 scenarios          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+check_fsh_test_35plus(C) :-
+    % Test within 6 months of service date, detail depends on age <40 or ≥40
+    patient_age_at_time_of_service(C, Age),
+    most_recent_day_3_fsh_test(C, fsh_test(Level, TestDate, _)),
+    claim_date_service_received(C, ServiceDate),
+    leq_n_months_diff(TestDate, ServiceDate, 6),
+    (   Age < 40
+    ->  Level < 19
+    ;   % Age ≥ 40 => all FSH tests since age 40 must be < 19
+        day_3_fsh_tests_since_age_40_in_claim(C, Tests),
+        \+ exists_test_with_level_at_least_19(Tests)
+    ).
+
